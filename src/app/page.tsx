@@ -1,8 +1,9 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { getDb, persistNow } from '@/db';
+import { getDb, persistNow, nukeDb } from '@/db';
 import { todos, type Todo, type NewTodo } from '@/db/schema';
+import { Button } from '@/components/ui/button';
 import { eq, like, asc, desc, count } from 'drizzle-orm';
 
 export default function Home() {
@@ -53,9 +54,21 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-black font-sans">
       <main className="mx-auto max-w-2xl px-4 py-16">
-        <h1 className="text-3xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50 mb-8">
-          Drizzle + sql.js + IndexedDB
-        </h1>
+        <div className="flex items-center justify-between mb-8">
+          <h1 className="text-3xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
+            Drizzle + sql.js + IndexedDB
+          </h1>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={async () => {
+              await nukeDb();
+              window.location.reload();
+            }}
+          >
+            Nuke DB
+          </Button>
+        </div>
 
         {!dbReady && (
           <p className="text-zinc-500 mb-4">Loading database...</p>

@@ -33,6 +33,14 @@ export async function saveDatabase(data: Uint8Array): Promise<void> {
   });
 }
 
+export async function deleteDatabase(): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.deleteDatabase(DB_NAME);
+    request.onsuccess = () => resolve();
+    request.onerror = () => reject(request.error);
+  });
+}
+
 export async function loadDatabase(): Promise<Uint8Array | null> {
   const idb = await openStorage();
   return new Promise((resolve, reject) => {
