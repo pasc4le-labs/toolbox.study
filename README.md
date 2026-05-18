@@ -1,36 +1,102 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# studying-tools
 
-## Getting Started
+A Next.js playground for trying out dev tools, libraries, and browser APIs. Currently exploring **Drizzle ORM + sql.js + IndexedDB** — a fully client-side SQLite stack that runs in the browser with no backend.
 
-First, run the development server:
+## Tech stack
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+| What | Why |
+|------|-----|
+| [Next.js (App Router)](https://nextjs.org) | React framework |
+| [Drizzle ORM](https://orm.drizzle.team) | Type-safe SQL query builder |
+| [sql.js](https://github.com/sql-js/sql.js) | SQLite compiled to WebAssembly — runs in the browser |
+| [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API) | Stores the sql.js database snapshot (`Uint8Array`) so data survives page reloads |
+| [Tailwind CSS v4](https://tailwindcss.com) | Styling |
+| [shadcn/ui](https://ui.shadcn.com) | UI primitives |
+
+## How it works
+
+```
+                ┌─────────────────────────────────┐
+                │         Next.js (React)          │
+                │         ┌──────────────────┐     │
+                │         │    page.tsx       │     │
+                │         │  (CRUD todo app)  │     │
+                │         └────────┬─────────┘     │
+                │                  │                │
+                │         ┌────────▼─────────┐     │
+                │         │   db/index.ts     │     │
+                │         │  (Drizzle ORM)    │     │
+                │         │  db.select()...   │     │
+                │         │  db.insert()...   │     │
+                │         │  db.update()...   │     │
+                │         │  db.delete()...   │     │
+                │         └────────┬─────────┘     │
+                │                  │                │
+                │         ┌────────▼─────────┐     │
+                │         │    sql.js         │     │
+                │         │  (SQLite in WASM) │     │
+                │         │  in-memory .db    │     │
+                │         └──┬───────────┬────┘     │
+                │            │           │          │
+                │      export()      load from      │
+                │      Uint8Array    Uint8Array      │
+                │            │           │          │
+                │    ┌───────▼───────────▼────┐     │
+                │    │     storage.ts          │     │
+                │    │   (IndexedDB wrapper)   │     │
+                │    │   saveDatabase(data)    │     │
+                │    │   loadDatabase()        │     │
+                │    └────────────────────────┘     │
+                └─────────────────────────────────────┘
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+1. On first load, `sql.js` spins up a SQLite instance in WebAssembly.
+2. An in-memory database is created, tables are created via raw SQL.
+3. Drizzle ORM wraps the sql.js instance and exposes typed query builders.
+4. After every write (insert/update/delete), `persistNow()` serializes the db via `sqlDb.export()` → `Uint8Array` and stores it in IndexedDB.
+5. On subsequent page loads, the `Uint8Array` is read from IndexedDB and fed back to `new SQL.Database(bytes)` — data is restored.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Project structure
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+src/
+├── app/
+│   ├── layout.tsx          # Root layout
+│   ├── page.tsx            # Todo UI (CRUD + query demos)
+│   └── globals.css         # Tailwind styles
+├── db/
+│   ├── schema.ts           # Drizzle table definitions (todos)
+│   ├── storage.ts          # IndexedDB save/load helpers
+│   └── index.ts            # DB init — WASM load, restore from IndexedDB, Drizzle wrap
+├── components/ui/          # shadcn/ui components
+└── lib/utils.ts            # Shared utilities
+```
 
-## Learn More
+## Getting started
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+pnpm install      # installs deps + copies sql.js .wasm files to public/
+pnpm dev          # starts dev server at http://localhost:3000
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Build
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+pnpm build        # production build
+pnpm start        # run production build
+```
 
-## Deploy on Vercel
+## WASM files
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+`sql.js` ships two WebAssembly binaries (`sql-wasm.wasm`, `sql-wasm-browser.wasm`) that must be served as static files. A `postinstall` script (`copy-wasm.mjs`) copies them from `node_modules/sql.js/dist/` to `public/`. They are gitignored — re-run `pnpm install` to get them.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Key files
+
+- **`src/db/schema.ts`** — Single `todos` table with `id`, `title`, `done` (boolean mode), `created_at`.
+- **`src/db/storage.ts`** — Two functions: `saveDatabase(Uint8Array)` and `loadDatabase()`, wrapping the native IndexedDB API.
+- **`src/db/index.ts`** — Singleton DB init. Calls `initSqlJs()` → loads from IndexedDB or creates fresh → runs `CREATE TABLE` → wraps with `drizzle()`.
+- **`src/app/page.tsx`** — Todo list UI with add/toggle/delete, search filter, and demo buttons for `COUNT`, `LIKE`, `LIMIT` queries.
+
+## Upcoming experiments
+
+todo.
