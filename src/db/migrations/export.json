@@ -1,0 +1,10 @@
+[
+  {
+    "sql": [
+      "CREATE TABLE IF NOT EXISTS `todos` (\n\t`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,\n\t`title` text NOT NULL,\n\t`done` integer DEFAULT false NOT NULL,\n\t`created_at` integer DEFAULT 1779069418057 NOT NULL\n);\n"
+    ],
+    "bps": true,
+    "folderMillis": 1779069418061,
+    "hash": "95c01da03c07b9f411c6e284fb081bed52ac18ae6aaff2fb88c48a703d704bcb"
+  }
+]

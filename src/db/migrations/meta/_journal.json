@@ -1,0 +1,13 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1779069418061,
+      "tag": "20260518015658_eager_starbolt",
+      "breakpoints": true
+    }
+  ]
+}

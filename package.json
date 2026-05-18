@@ -7,7 +7,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "postinstall": "node copy-wasm.mjs"
+    "postinstall": "node copy-wasm.mjs",
+    "db:generate": "drizzle-kit generate",
+    "db:export": "tsx scripts/export-migrations.ts",
+    "db:migrate": "pnpm db:generate && pnpm db:export"
   },
   "dependencies": {
     "@remixicon/react": "^4.9.0",
@@ -30,9 +33,11 @@
     "@types/react-dom": "^19",
     "@types/sql.js": "^1.4.11",
     "babel-plugin-react-compiler": "1.0.0",
+    "drizzle-kit": "^0.31.10",
     "eslint": "^9",
     "eslint-config-next": "16.2.6",
     "tailwindcss": "^4",
+    "tsx": "^4.22.1",
     "typescript": "^5"
   }
 }
