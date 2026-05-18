@@ -24,7 +24,7 @@ export async function getDb(): Promise<{
 
   if (!_SQL) {
     _SQL = await initSqlJs({
-      locateFile: (file) => `https://sql.js.org/dist/${file}`,
+      locateFile: (file) => `/${file}`,
     });
   }
 
