@@ -1,10 +1,14 @@
 [
   {
     "sql": [
-      "CREATE TABLE IF NOT EXISTS `todos` (\n\t`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,\n\t`title` text NOT NULL,\n\t`done` integer DEFAULT false NOT NULL,\n\t`created_at` integer DEFAULT 1779069418057 NOT NULL\n);\n"
+      "CREATE TABLE `bundle_cards` (\n\t`card_id` integer NOT NULL,\n\t`bundle_id` integer NOT NULL,\n\tPRIMARY KEY(`card_id`, `bundle_id`),\n\tFOREIGN KEY (`card_id`) REFERENCES `cards`(`id`) ON UPDATE no action ON DELETE cascade,\n\tFOREIGN KEY (`bundle_id`) REFERENCES `bundles`(`id`) ON UPDATE no action ON DELETE cascade\n);\n",
+      "\nCREATE TABLE `bundles` (\n\t`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,\n\t`title` text NOT NULL,\n\t`created_at` integer DEFAULT 1779070708368 NOT NULL\n);\n",
+      "\nCREATE TABLE `card_tags` (\n\t`card_id` integer NOT NULL,\n\t`tag` text NOT NULL,\n\tPRIMARY KEY(`card_id`, `tag`),\n\tFOREIGN KEY (`card_id`) REFERENCES `cards`(`id`) ON UPDATE no action ON DELETE cascade\n);\n",
+      "\nCREATE TABLE `cards` (\n\t`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,\n\t`front` text NOT NULL,\n\t`back` text NOT NULL,\n\t`explanation` text,\n\t`created_at` integer DEFAULT 1779070708368 NOT NULL\n);\n",
+      "\nCREATE TABLE `todos` (\n\t`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,\n\t`title` text NOT NULL,\n\t`done` integer DEFAULT false NOT NULL,\n\t`created_at` integer DEFAULT 1779070708369 NOT NULL\n);\n"
     ],
     "bps": true,
-    "folderMillis": 1779069418061,
-    "hash": "95c01da03c07b9f411c6e284fb081bed52ac18ae6aaff2fb88c48a703d704bcb"
+    "folderMillis": 1779070708373,
+    "hash": "c8ffa6d4e1b87c3c438b108170fd7272922ae1e1064c9eb54f350d7624877274"
   }
 ]
