@@ -22,9 +22,9 @@ export const cardTags = sqliteTable(
       .references(() => cards.id, { onDelete: 'cascade' }),
     tag: text('tag').notNull(),
   },
-  (table) => ({
-    pk: primaryKey({ columns: [table.cardId, table.tag] }),
-  }),
+  (table) => [
+    primaryKey({ columns: [table.cardId, table.tag] }),
+  ],
 );
 
 export type CardTag = typeof cardTags.$inferSelect;
@@ -51,9 +51,9 @@ export const bundleCards = sqliteTable(
       .notNull()
       .references(() => bundles.id, { onDelete: 'cascade' }),
   },
-  (table) => ({
-    pk: primaryKey({ columns: [table.cardId, table.bundleId] }),
-  }),
+  (table) => [
+    primaryKey({ columns: [table.cardId, table.bundleId] }),
+  ],
 );
 
 export type BundleCard = typeof bundleCards.$inferSelect;
