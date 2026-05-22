@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { RiHeartFill } from "@remixicon/react";
+import { Boxed } from "@/components/boxed";
 
 export function Footer() {
   return (
-    <footer className="border-t bg-muted/50">
-      <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-8 md:flex-row md:items-center md:justify-between">
+    <footer className="border-t bg-muted/30">
+      <Boxed className="flex flex-col gap-4 py-8 md:flex-row md:items-center md:justify-between">
         <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted-foreground">
           <Link
             href="/tos"
@@ -22,7 +23,7 @@ export function Footer() {
 
         <div className="flex flex-col gap-1 text-sm text-muted-foreground">
           <p>
-            &copy; {new Date().getFullYear()} StudyToolbox. Licensed under{" "}
+            &copy; {new Date().getFullYear()} Giuseppe Pascale. Licensed under{" "}
             <a
               href="https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12"
               target="_blank"
@@ -48,7 +49,7 @@ export function Footer() {
             .
           </p>
         </div>
-      </div>
+      </Boxed>
     </footer>
   );
 }
