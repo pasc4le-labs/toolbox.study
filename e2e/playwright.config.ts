@@ -1,5 +1,4 @@
 import { defineConfig, devices } from "@playwright/test";
-import path from "path";
 
 export default defineConfig({
   testDir: ".",
@@ -21,24 +20,15 @@ export default defineConfig({
           args: [
             "--use-fake-ui-for-media-stream",
             "--use-fake-device-for-media-stream",
-            "--disable-features=IsolateOrigins,site-per-process",
           ],
         },
       },
     },
   ],
-  webServer: [
-    {
-      command: "cd .. && pnpm dev",
-      url: "http://localhost:3000",
-      reuseExistingServer: !process.env.CI,
-      timeout: 30000,
-    },
-    {
-      command: "cd ../relay && go run .",
-      url: "http://localhost:8080/health",
-      reuseExistingServer: !process.env.CI,
-      timeout: 15000,
-    },
-  ],
+  webServer: {
+    command: "cd .. && pnpm dev",
+    url: "http://localhost:3000",
+    reuseExistingServer: !process.env.CI,
+    timeout: 60000,
+  },
 });
