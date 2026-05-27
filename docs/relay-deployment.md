@@ -27,6 +27,21 @@ docker build -t studytoolbox-relay .
 docker run -p 8080:8080 studytoolbox-relay
 ```
 
+## Docker Compose
+
+A `docker-compose.yml` is provided at the repo root:
+
+```bash
+# Copy the example env file and edit as needed
+cp .env.example .env
+
+# Build and run
+docker compose up -d
+
+# Or pull from GHCR instead of building locally
+docker compose pull && docker compose up -d
+```
+
 ## GitHub Container Registry
 
 On every tag push matching `v*`, GitHub Actions builds and pushes a multi-arch image:

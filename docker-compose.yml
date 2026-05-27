@@ -1,0 +1,16 @@
+services:
+  relay:
+    build:
+      context: ./relay
+      dockerfile: Dockerfile
+    image: ghcr.io/pasc4le/studytoolbox-relay:latest
+    container_name: studytoolbox-relay
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    environment:
+      PORT: ${RELAY_PORT:-8080}
+      ROOM_TTL_SECONDS: ${RELAY_ROOM_TTL_SECONDS:-600}
+      SWEEP_INTERVAL_SECONDS: ${RELAY_SWEEP_INTERVAL_SECONDS:-30}
+    restart: unless-stopped
