@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import Peer from "simple-peer-light";
+import Peer, { type SimplePeerInstance } from "simple-peer-light";
 
 export type PeerState = {
   connected: boolean;
@@ -23,7 +23,7 @@ export function useWebRTCPeer(opts: {
     error: null,
   });
 
-  const peerRef = useRef<Peer.Instance | null>(null);
+  const peerRef = useRef<SimplePeerInstance | null>(null);
   const onSignalRef = useRef(opts.onSignal);
   onSignalRef.current = opts.onSignal;
 
