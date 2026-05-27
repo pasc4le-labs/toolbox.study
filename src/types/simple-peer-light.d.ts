@@ -3,6 +3,7 @@ declare module "simple-peer-light" {
 
   export interface SimplePeerInstance extends EventEmitter {
     connected: boolean;
+    destroyed: boolean;
     send(data: string | Uint8Array | ArrayBuffer): void;
     signal(data: any): void;
     destroy(): void;

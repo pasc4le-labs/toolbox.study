@@ -28,6 +28,7 @@ export default function OfferPage() {
 
   const [peerState, peerActions] = useWebRTCPeer({
     initiator: true,
+    ready: signalingState.status === "paired",
     onSignal: useCallback(
       (data: any) => {
         signalingActions.sendSignal(data);

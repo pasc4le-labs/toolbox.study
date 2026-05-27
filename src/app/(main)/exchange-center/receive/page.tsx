@@ -26,6 +26,7 @@ export default function ReceivePage() {
   const [signalingState, signalingActions] = useSignaling();
   const [peerState, peerActions] = useWebRTCPeer({
     initiator: false,
+    ready: signalingState.status === "paired",
     onSignal: useCallback(
       (data: any) => {
         signalingActions.sendSignal(data);
@@ -113,6 +114,22 @@ export default function ReceivePage() {
     }
   }, [peerState.connected, phase]);
 
+  // React to signaling errors — never stuck on "connecting"
+  useEffect(() => {
+    if (signalingState.status === "error" && phase === "connecting") {
+      setPhase("input");
+      toast.error(signalingState.error ?? "Connection failed");
+    }
+  }, [signalingState.status, signalingState.error, phase]);
+
+  // React to WebRTC errors during connecting
+  useEffect(() => {
+    if (peerState.error && phase === "connecting") {
+      setPhase("input");
+      toast.error("WebRTC error: " + peerState.error.message);
+    }
+  }, [peerState.error, phase]);
+
   const onRequest = () => {
     if (selected.size === 0) {
       toast.error("Select at least one item to import");
@@ -158,6 +175,12 @@ export default function ReceivePage() {
           <p className="mt-2 text-sm text-muted-foreground">
             Joining room {roomCode.toUpperCase()}
           </p>
+          {signalingState.error && (
+            <p className="mt-4 text-sm text-destructive">{signalingState.error}</p>
+          )}
+          {peerState.error && (
+            <p className="mt-4 text-sm text-destructive">{peerState.error.message}</p>
+          )}
         </Card>
       </div>
     );
