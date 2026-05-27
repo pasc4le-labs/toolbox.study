@@ -114,7 +114,7 @@ export default function CardsPage() {
       ) : (
         <div className="space-y-3">
           {cards.map((card) => (
-            <Link key={card.id} href={`/study-dome/cards/${card.id}`}>
+            <Link key={card.id} href={`/study-dome/cards/${card.id}`} className="block">
               <Card className="cursor-pointer transition-all hover:border-primary hover:shadow-sm">
                 <CardContent className="flex items-start justify-between py-4">
                   <div className="flex-1">
