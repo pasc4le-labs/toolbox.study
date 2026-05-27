@@ -1,0 +1,30 @@
+name: Relay CI
+
+on:
+  push:
+    branches: [main]
+    paths: ["relay/**"]
+  pull_request:
+    branches: [main]
+    paths: ["relay/**"]
+
+permissions:
+  contents: read
+
+jobs:
+  lint-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: relay
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.23"
+      - name: Go vet
+        run: go vet ./...
+      - name: Go test
+        run: go test ./...
+      - name: Docker build (dry-run)
+        run: docker build .
