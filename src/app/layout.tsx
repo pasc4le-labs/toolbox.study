@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, Raleway } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
@@ -13,6 +13,12 @@ export const metadata: Metadata = {
   description: "Your study companion",
 };
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -23,7 +29,7 @@ export default function RootLayout({
       lang="en"
       className={cn("h-full antialiased font-sans", inter.variable, ralewayHeading.variable)}
     >
-      <body className="min-h-full">
+      <body className="min-h-screen">
         {children}
         <Toaster richColors closeButton />
         <DbReset />

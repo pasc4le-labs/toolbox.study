@@ -12,7 +12,7 @@ export function Boxed({
   as: Component = "div",
 }: BoxedProps) {
   return (
-    <Component className={cn("mx-auto max-w-6xl px-4", className)}>
+    <Component className={cn("mx-auto w-full max-w-7xl px-4 md:px-8", className)}>
       {children}
     </Component>
   );

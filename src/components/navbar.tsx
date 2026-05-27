@@ -3,8 +3,8 @@ import { Boxed } from "@/components/boxed";
 
 export function Navbar() {
   return (
-    <header className="sticky top-0 z-40 border-b bg-background/60 backdrop-blur-xl supports-[backdrop-filter]:bg-background/40">
-      <Boxed className="flex h-14 items-center justify-between">
+    <header className="sticky top-0 z-40 border-b bg-background/60 backdrop-blur-xl transition-colors supports-[backdrop-filter]:bg-background/40">
+      <Boxed className="flex h-14 items-center justify-between [padding-left:calc(1rem+env(safe-area-inset-left))] [padding-right:calc(1rem+env(safe-area-inset-right))] [padding-top:calc(0.5rem+env(safe-area-inset-top))]">
         <Link href="/" className="flex items-center">
           <img
             src="/logo.svg"

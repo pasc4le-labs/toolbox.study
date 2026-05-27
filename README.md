@@ -156,6 +156,19 @@ The `__drizzle_migrations` table records each migration's hash and timestamp. On
 - **`scripts/export-migrations.ts`** — Build-time script that bundles `.sql` files into `export.json` using `drizzle-orm/migrator`'s `readMigrationFiles()`.
 - **`src/app/page.tsx`** — Todo list UI with add/toggle/delete, search filter, demo buttons for `COUNT`/`LIKE`/`LIMIT`, and a **Nuke DB** button to wipe and re-migrate.
 
+## Design & Layout
+
+StudyToolbox is built with a **local-first, mobile-first approach**:
+
+- **Safe-area aware**: Respects iOS notches, Dynamic Islands, and home indicators via CSS `env(safe-area-inset-*)`
+- **Sticky footer**: Footer always stays at the bottom using flexbox (`flex-1` on main content)
+- **Responsive**: Optimized for mobile (375px), tablet (768px), and desktop (1024px+)
+- **Touch-friendly**: All interactive elements meet 48px tap targets
+
+### Spacing Grid
+
+Built on a consistent 4px/8px grid using Tailwind's spacing scale.
+
 ## Upcoming experiments
 
 todo.

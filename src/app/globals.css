@@ -131,3 +131,5 @@
     @apply font-sans;
   }
 }
+
+/* Safe area insets are applied via Tailwind arbitrary values in components */

@@ -1,66 +1,74 @@
 import Link from "next/link";
 import { RiBookOpenLine, RiMagicLine } from "@remixicon/react";
 import { Boxed } from "@/components/boxed";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 
 export default function Home() {
   return (
-    <Boxed className="py-24">
-      <div className="relative mb-16">
-        <div className="pointer-events-none absolute -inset-4 -top-16 rounded-3xl bg-gradient-to-b from-primary/5 to-transparent" />
-        <div className="relative">
-          <h1 className="font-heading text-4xl font-bold tracking-tight md:text-5xl">
+    <Boxed className="py-12 md:py-16">
+      {/* Hero section */}
+      <div className="relative mb-12 md:mb-16">
+        <div className="relative space-y-3">
+          <h1 className="font-heading text-3xl font-bold tracking-tight text-foreground md:text-4xl">
             Welcome to{" "}
-            <span className="text-primary">StudyToolbox</span>
+            <span className="bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+              StudyToolbox
+            </span>
           </h1>
-          <p className="mt-4 max-w-lg text-lg text-muted-foreground">
-            Your study companion. Review flashcards, take exams, and generate
-            cards with AI.
+          <p className="max-w-2xl text-sm text-muted-foreground md:text-base">
+            Your local-first study companion. Review flashcards, take exams,
+            generate cards with AI — all stored securely in your browser.
           </p>
         </div>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
-        <Link href="/study-dome">
-          <Card className="group cursor-pointer transition-all hover:border-primary hover:shadow-lg">
-            <CardHeader>
-              <RiBookOpenLine className="mb-2 h-10 w-10 text-primary" />
-              <CardTitle className="text-2xl">Study Dome</CardTitle>
-              <CardDescription className="text-base">
-                Review cards, take exams, track your progress with spaced
-                repetition.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <span className="text-sm font-medium text-primary group-hover:underline">
-                Enter Study Dome &rarr;
-              </span>
-            </CardContent>
-          </Card>
+      {/* Applet Portals */}
+      <div className="grid gap-8 md:grid-cols-2">
+        <Link href="/study-dome" className="group">
+          <div className="relative h-52 overflow-hidden rounded-2xl border-2 border-primary/20 bg-gradient-to-br from-primary/5 via-background to-background transition-all duration-300 hover:border-primary/50 hover:shadow-2xl hover:shadow-primary/20">
+            {/* Applet content area */}
+            <div className="flex h-full flex-col justify-center px-6 py-2">
+              {/* Icon and header */}
+              <div className="space-y-3">
+                <div className="inline-flex h-14 w-14 items-center justify-center rounded-xl bg-primary/15 transition-all duration-300 group-hover:scale-110 group-hover:bg-primary/25">
+                  <RiBookOpenLine className="h-7 w-7 text-primary" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-foreground">Study Dome</h2>
+                  <p className="mt-1 text-xs text-muted-foreground/80">
+                    Review cards, take exams, and track your progress with spaced
+                    repetition.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Ambient glow effect */}
+            <div className="pointer-events-none absolute -right-16 -top-16 h-32 w-32 rounded-full bg-primary/5 blur-3xl transition-all duration-300 group-hover:bg-primary/10" />
+          </div>
         </Link>
 
-        <Link href="/ai-factory">
-          <Card className="group cursor-pointer transition-all hover:border-primary hover:shadow-lg">
-            <CardHeader>
-              <RiMagicLine className="mb-2 h-10 w-10 text-primary" />
-              <CardTitle className="text-2xl">AI Factory</CardTitle>
-              <CardDescription className="text-base">
-                Generate flashcards from content using AI. Supports
-                any OpenAI-compatible provider.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <span className="text-sm font-medium text-primary group-hover:underline">
-                Enter AI Factory &rarr;
-              </span>
-            </CardContent>
-          </Card>
+        <Link href="/ai-factory" className="group">
+          <div className="relative h-52 overflow-hidden rounded-2xl border-2 border-primary/20 bg-gradient-to-br from-primary/5 via-background to-background transition-all duration-300 hover:border-primary/50 hover:shadow-2xl hover:shadow-primary/20">
+            {/* Applet content area */}
+            <div className="flex h-full flex-col justify-center px-6 py-2">
+              {/* Icon and header */}
+              <div className="space-y-3">
+                <div className="inline-flex h-14 w-14 items-center justify-center rounded-xl bg-primary/15 transition-all duration-300 group-hover:scale-110 group-hover:bg-primary/25">
+                  <RiMagicLine className="h-7 w-7 text-primary" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-foreground">AI Factory</h2>
+                  <p className="mt-1 text-xs text-muted-foreground/80">
+                    Generate flashcards from content using AI. Supports any
+                    OpenAI-compatible provider.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Ambient glow effect */}
+            <div className="pointer-events-none absolute -right-16 -top-16 h-32 w-32 rounded-full bg-primary/5 blur-3xl transition-all duration-300 group-hover:bg-primary/10" />
+          </div>
         </Link>
       </div>
     </Boxed>
