@@ -8,28 +8,27 @@ import (
 	"os"
 	"os/signal"
 	"time"
-
-	"github.com/coder/websocket"
-	"github.com/coder/websocket/wsjson"
 )
 
 func main() {
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
-	}
+	config := LoadConfig()
+
+	hub := NewHub(config)
+	go hub.RunSweep()
+
+	wsHandler := NewWSHandler(hub)
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /health", healthHandler)
-	mux.HandleFunc("GET /ws", wsHandler)
+	mux.Handle("GET /ws", wsHandler)
 
 	server := &http.Server{
-		Addr:    ":" + port,
+		Addr:    ":" + config.Port,
 		Handler: mux,
 	}
 
 	go func() {
-		log.Printf("relay listening on :%s", port)
+		log.Printf("relay listening on :%s", config.Port)
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("server error: %v", err)
 		}
@@ -52,35 +51,4 @@ func healthHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	_ = json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
-}
-
-func wsHandler(w http.ResponseWriter, r *http.Request) {
-	conn, err := websocket.Accept(w, r, &websocket.AcceptOptions{
-		OriginPatterns: []string{"*"},
-	})
-	if err != nil {
-		log.Printf("websocket accept error: %v", err)
-		return
-	}
-	defer conn.Close(websocket.StatusNormalClosure, "")
-
-	ctx := context.Background()
-
-	for {
-		var msg map[string]any
-		err := wsjson.Read(ctx, conn, &msg)
-		if err != nil {
-			if websocket.CloseStatus(err) == websocket.StatusNormalClosure {
-				return
-			}
-			log.Printf("websocket read error: %v", err)
-			return
-		}
-
-		// Echo back for now
-		if err := wsjson.Write(ctx, conn, msg); err != nil {
-			log.Printf("websocket write error: %v", err)
-			return
-		}
-	}
 }
