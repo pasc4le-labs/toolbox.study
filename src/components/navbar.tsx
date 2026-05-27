@@ -30,6 +30,12 @@ export function Navbar() {
           >
             AI Factory
           </Link>
+          <Link
+            href="/exchange-center"
+            className="text-muted-foreground transition-colors hover:text-foreground"
+          >
+            Exchange Center
+          </Link>
         </nav>
       </Boxed>
     </header>
