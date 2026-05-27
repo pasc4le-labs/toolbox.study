@@ -1,6 +1,6 @@
 # studying-tools
 
-A Next.js playground for trying out dev tools, libraries, and browser APIs. Currently exploring **Drizzle ORM + sql.js + IndexedDB** — a fully client-side SQLite stack that runs in the browser with no backend.
+A local-first study companion built with Next.js. Features flashcard review with FSRS spaced repetition, AI-generated cards, exams, and **P2P exchange** via WebRTC. All data lives in an in-memory SQLite database (sql.js) persisted to IndexedDB — no backend required for core functionality.
 
 ## Tech stack
 
@@ -12,6 +12,8 @@ A Next.js playground for trying out dev tools, libraries, and browser APIs. Curr
 | [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API) | Stores the sql.js database snapshot (`Uint8Array`) so data survives page reloads |
 | [Tailwind CSS v4](https://tailwindcss.com) | Styling |
 | [shadcn/ui](https://ui.shadcn.com) | UI primitives |
+| [simple-peer-light](https://github.com/mitschabaude/simple-peer-light) | WebRTC data channel wrapper |
+| [coder/websocket](https://github.com/coder/websocket) | Go WebSocket signaling library |
 
 ## How it works
 
@@ -169,6 +171,25 @@ StudyToolbox is built with a **local-first, mobile-first approach**:
 
 Built on a consistent 4px/8px grid using Tailwind's spacing scale.
 
-## Upcoming experiments
+## Applets
 
-todo.
+- **Study Dome** — Review cards, manage bundles & tags, take exams, track progress with FSRS.
+- **AI Factory** — Generate flashcards from any content using OpenAI-compatible AI providers.
+- **Exchange Center** — Share cards, bundles, and exams peer-to-peer via WebRTC. Uses a lightweight Go relay for initial signaling.
+
+## Relay
+
+The Exchange Center requires a signaling relay to pair browsers. A standalone Go service lives in `relay/`:
+
+```bash
+cd relay
+go run .
+```
+
+See [`docs/relay-deployment.md`](docs/relay-deployment.md) for Docker and production deployment.
+
+## Documentation
+
+- [`docs/architecture.md`](docs/architecture.md) — System architecture and data flow
+- [`docs/exchange-center.md`](docs/exchange-center.md) — How to use the Exchange Center
+- [`docs/relay-deployment.md`](docs/relay-deployment.md) — Relay deployment guide
