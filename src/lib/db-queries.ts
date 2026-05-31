@@ -641,6 +641,20 @@ export async function completeExamAttempt(db: Db, attemptId: number) {
     .set({ completedAt: Date.now(), score })
     .where(eq(schema.examAttempts.id, attemptId));
 
+  // Update FSRS state for each auto-graded answer.
+  // Correct → Rating.Good (reinforce), incorrect → Rating.Again (re-schedule soon).
+  // Open-type answers (isCorrect === null) are skipped — no automatic FSRS update.
+  for (const answer of answered) {
+    try {
+      const rating = answer.isCorrect ? Rating.Good : Rating.Again;
+      await rateCard(db, answer.cardId, rating);
+    } catch (e) {
+      // Don't fail exam completion if FSRS update fails for a single card
+      console.error(`Failed to update FSRS for card ${answer.cardId}:`, e);
+    }
+  }
+
+  await persistNow();
   return score;
 }
 

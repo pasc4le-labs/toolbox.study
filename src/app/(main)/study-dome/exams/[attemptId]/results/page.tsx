@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, use } from "react";
 import Link from "next/link";
-import { RiCheckLine, RiCloseLine, RiArrowLeftLine } from "@remixicon/react";
+import { RiCheckLine, RiCloseLine, RiArrowLeftLine, RiRefreshLine } from "@remixicon/react";
 import { Boxed } from "@/components/boxed";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -63,6 +63,7 @@ export default function ExamResultsPage({ params }: { params: Promise<{ attemptI
 
   const correctCount = answers.filter((a) => a.isCorrect).length;
   const wrongCount = answers.filter((a) => a.isCorrect === false).length;
+  const ungradedCount = answers.filter((a) => a.isCorrect === null).length;
 
   const totalEarned = correctCount * pointsPerCorrect + wrongCount * pointsPerWrong;
   const maxPossible = answers.length * pointsPerCorrect;
@@ -134,6 +135,34 @@ export default function ExamResultsPage({ params }: { params: Promise<{ attemptI
             <div className="text-center text-sm text-muted-foreground">
               Time: {formatTime(timeTaken)}
             </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* FSRS update summary */}
+      <Card className="mb-6">
+        <CardContent className="py-4">
+          <h3 className="mb-3 text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+            Spaced Repetition Impact
+          </h3>
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <RiCheckLine className="h-4 w-4 text-green-500 shrink-0" />
+              <span className="text-sm">
+                <strong>{correctCount}</strong> card{correctCount !== 1 ? "s" : ""} reinforced (correct answer{correctCount !== 1 ? "s" : ""})
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <RiRefreshLine className="h-4 w-4 text-orange-500 shrink-0" />
+              <span className="text-sm">
+                <strong>{wrongCount}</strong> card{wrongCount !== 1 ? "s" : ""} marked for re-review (incorrect answer{wrongCount !== 1 ? "s" : ""})
+              </span>
+            </div>
+            {ungradedCount > 0 && (
+              <p className="mt-1 text-xs text-muted-foreground">
+                {ungradedCount} open answer{ungradedCount !== 1 ? "s" : ""} not auto-graded — FSRS not updated
+              </p>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -228,6 +257,14 @@ export default function ExamResultsPage({ params }: { params: Promise<{ attemptI
         {results.exam?.bundleId && (
           <Button asChild>
             <Link href={`/study-dome/bundles/${results.exam.bundleId}`}>Back to Bundle</Link>
+          </Button>
+        )}
+        {wrongCount > 0 && results.exam?.bundleId && (
+          <Button asChild>
+            <Link href={`/study-dome/review?bundleId=${results.exam.bundleId}`}>
+              <RiRefreshLine className="mr-2 h-4 w-4" />
+              Review Weak Cards
+            </Link>
           </Button>
         )}
       </div>

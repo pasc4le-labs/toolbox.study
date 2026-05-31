@@ -38,6 +38,35 @@ StudyToolbox is a local-first study application. All user data lives in an in-me
 - IndexedDB for persistence between sessions
 - Migrations handled via Drizzle Kit
 
+## Exam → FSRS Pipeline
+
+When a student completes an exam (`completeExamAttempt` in `src/lib/db-queries.ts`), each auto-graded answer feeds into the FSRS spaced-repetition scheduler:
+
+| `examAnswers.isCorrect` | FSRS Rating | Effect |
+|---|---|---|
+| `true` | `Rating.Good` (3) | Card reinforced — scheduled further into the future |
+| `false` | `Rating.Again` (1) | Card marked for re-review — becomes due sooner |
+| `null` (open answers) | Skipped | No automatic FSRS update (cannot auto-grade) |
+
+This update happens automatically on exam completion, using the existing `rateCard` function. Each card's `cardFsrs` row is updated and a `reviewLogs` entry is inserted. The call is wrapped in a try/catch so that a single card failure doesn't prevent exam completion.
+
+The results page displays a summary of how many cards were reinforced vs. marked for re-review, and offers a "Review Weak Cards" button linking to the review page filtered by the exam's bundle.
+
+### Mapping Code (`src/lib/db-queries.ts`)
+
+```ts
+// Inside completeExamAttempt, after score computation:
+for (const answer of answered) {
+  try {
+    const rating = answer.isCorrect ? Rating.Good : Rating.Again;
+    await rateCard(db, answer.cardId, rating);
+  } catch (e) {
+    console.error(`Failed to update FSRS for card ${answer.cardId}:`, e);
+  }
+}
+await persistNow();
+```
+
 ## Relay
 
 A standalone Go binary in `relay/`:
