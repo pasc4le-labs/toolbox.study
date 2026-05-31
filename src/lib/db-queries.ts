@@ -728,6 +728,54 @@ export async function getDefaultAiProvider(db: Db) {
   return provider ?? null;
 }
 
+// ── Untagged cards tagger helpers ──
+
+export async function getUntaggedCardsByBundle(db: Db, bundleId: number) {
+  // Get all card IDs in bundle
+  const bundleCardRows = await db
+    .select({
+      cardId: schema.bundleCards.cardId,
+      order: schema.bundleCards.order,
+    })
+    .from(schema.bundleCards)
+    .where(eq(schema.bundleCards.bundleId, bundleId))
+    .orderBy(asc(schema.bundleCards.order));
+
+  if (bundleCardRows.length === 0) return [];
+
+  const cardIds = bundleCardRows.map((r) => r.cardId);
+
+  // Get all cardIds that already have at least one tag
+  const taggedRows = await db
+    .select({ cardId: schema.cardTags.cardId })
+    .from(schema.cardTags)
+    .where(inArray(schema.cardTags.cardId, cardIds));
+
+  const taggedSet = new Set(taggedRows.map((r) => r.cardId));
+
+  // Filter to untagged cards
+  const untaggedIds = cardIds.filter((id) => !taggedSet.has(id));
+
+  if (untaggedIds.length === 0) return [];
+
+  // Fetch the full card data for untagged cards
+  const untaggedCards = await db
+    .select()
+    .from(schema.cards)
+    .where(inArray(schema.cards.id, untaggedIds))
+    .orderBy(asc(schema.cards.createdAt));
+
+  return untaggedCards;
+}
+
+export async function addTagsToCard(db: Db, cardId: number, tagIds: number[]) {
+  if (tagIds.length === 0) return;
+  await db.insert(schema.cardTags).values(
+    tagIds.map((tagId) => ({ cardId, tagId })),
+  );
+  await persistNow();
+}
+
 // ── Get cards by tag/bundle ──
 
 export async function getCardsByTag(db: Db, tagId: number) {

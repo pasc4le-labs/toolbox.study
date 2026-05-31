@@ -8,6 +8,7 @@ import { Boxed } from "@/components/boxed";
 const tabs = [
   { label: "Overview", href: "/factory" },
   { label: "Generate", href: "/factory/generate" },
+  { label: "Tagger", href: "/factory/tagger" },
   { label: "Import", href: "/factory/import" },
   { label: "Export", href: "/factory/export" },
 ];
