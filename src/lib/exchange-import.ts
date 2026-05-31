@@ -46,6 +46,16 @@ export async function importExchangeData(
   let cardsImported = 0;
   let bundlesImported = 0;
   let examsImported = 0;
+  let cardsSkipped = 0;
+
+  console.log("[exchange/import] Starting import. Input data:", {
+    cards: data.cards.length,
+    bundles: data.bundles.length,
+    exams: data.exams.length,
+    cardPreviews: data.cards.map(c => ({ id: c.id, front: c.front.slice(0, 40), type: c.type })),
+    bundlePreviews: data.bundles.map(b => ({ id: b.id, title: b.title, cardIds: b.cardIds })),
+    examPreviews: data.exams.map(e => ({ id: e.id, title: e.title, bundleId: e.bundleId })),
+  });
 
   // Import cards first
   for (const cardData of data.cards) {
@@ -57,7 +67,9 @@ export async function importExchangeData(
       .limit(1);
     if (existing.length > 0 && existing[0].type === cardData.type) {
       // Map old id to existing id for bundle/exam references
+      console.log(`[exchange/import] Card duplicate detected: id=${cardData.id} front="${cardData.front.slice(0, 30)}" → mapping to existing id=${existing[0].id}`);
       cardIdMap.set(cardData.id, existing[0].id);
+      cardsSkipped++;
       continue;
     }
 
@@ -79,6 +91,7 @@ export async function importExchangeData(
       tagIds,
     });
 
+    console.log(`[exchange/import] Card created: oldId=${cardData.id} → newId=${newCard.id} front="${cardData.front.slice(0, 30)}"`);
     cardIdMap.set(cardData.id, newCard.id);
     cardsImported++;
   }
@@ -109,6 +122,8 @@ export async function importExchangeData(
     const newCardIds = bundleData.cardIds
       .map((oldId) => cardIdMap.get(oldId))
       .filter((id): id is number => id !== undefined);
+
+    console.log(`[exchange/import] Bundle "${bundleData.title}" (oldId=${bundleData.id} → newId=${newBundle.id}): cardIds=${JSON.stringify(bundleData.cardIds)} → mapped=${JSON.stringify(newCardIds)}`);
 
     if (newCardIds.length > 0) {
       await db.insert(schema.bundleCards).values(
@@ -143,6 +158,8 @@ export async function importExchangeData(
     examsImported++;
   }
 
+  console.log(`[exchange/import] Import complete: ${cardsImported} cards imported (${cardsSkipped} duplicates skipped), ${bundlesImported} bundles, ${examsImported} exams`);
+  console.log(`[exchange/import] cardIdMap:`, Object.fromEntries(cardIdMap));
   await persistNow();
   return { cards: cardsImported, bundles: bundlesImported, exams: examsImported };
 }

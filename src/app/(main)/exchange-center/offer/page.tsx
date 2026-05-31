@@ -46,6 +46,11 @@ export default function OfferPage() {
         getAllBundles(db),
         getAllExams(db),
       ]);
+      console.log("[exchange/offer] Loaded items from DB:", {
+        cards: allCards.length,
+        bundles: allBundles.length,
+        exams: allExams.length,
+      });
       setCards(
         allCards.map((c) => ({ id: c.id, name: c.front.slice(0, 60), meta: c.type })),
       );
@@ -75,20 +80,23 @@ export default function OfferPage() {
     function onData(event: Event) {
       const data = (event as CustomEvent).detail;
       const text = typeof data === "string" ? data : new TextDecoder().decode(data);
+      console.log("[exchange/offer] Received peer-data message, length:", text.length, "preview:", text.slice(0, 200));
       try {
         const msg = JSON.parse(text);
+        console.log("[exchange/offer] Parsed message type:", msg.type, msg.type === "request" ? { items: msg.items } : "");
         if (msg.type === "request") {
           handleRequest(msg as ExchangeRequest);
         }
         if (msg.type === "import_complete") {
           const ic = msg as ImportComplete;
+          console.log("[exchange/offer] Import complete from peer:", ic.imported);
           toast.success(
             `Exchange complete! Peer imported ${ic.imported.cards} cards, ${ic.imported.bundles} bundles, ${ic.imported.exams} exams.`,
           );
           setPhase("done");
         }
-      } catch {
-        // ignore
+      } catch (e) {
+        console.warn("[exchange/offer] Failed to parse peer-data:", e);
       }
     }
     window.addEventListener("peer-data", onData);
@@ -96,13 +104,23 @@ export default function OfferPage() {
   }, [selected]);
 
   async function handleRequest(request: ExchangeRequest) {
+    console.log("[exchange/offer] handleRequest called with items:", request.items);
     setPhase("transferring");
     const { db } = await getDb();
     const payload = await serializeSelectedItems(db, request.items);
+    console.log("[exchange/offer] Serialized payload:", {
+      cards: payload.cards.length,
+      bundles: payload.bundles.length,
+      exams: payload.exams.length,
+      cardIds: payload.cards.map(c => c.id),
+      bundleCardIds: payload.bundles.map(b => ({ bundleId: b.id, title: b.title, cardIds: b.cardIds })),
+    });
     const json = JSON.stringify(payload);
+    console.log("[exchange/offer] JSON payload size:", json.length, "bytes");
     const messages = createTransferMessages(json);
 
     setTotalChunks(messages.length - 2); // excluding start and complete
+    console.log("[exchange/offer] Sending", messages.length, "messages (", messages.length - 2, " data chunks)");
 
     for (let i = 0; i < messages.length; i++) {
       const msg = messages[i];
@@ -115,6 +133,7 @@ export default function OfferPage() {
         await new Promise((r) => setTimeout(r, 0));
       }
     }
+    console.log("[exchange/offer] Transfer complete, all messages sent");
   }
 
   const onCreateRoom = async () => {
@@ -133,11 +152,21 @@ export default function OfferPage() {
       // Send manifest
       async function sendManifest() {
         const { db } = await getDb();
-        const manifest = await buildManifest(db, {
-          cards: cards.filter((c) => selected.has(`card:${c.id}`)).map((c) => c.id),
-          bundles: bundles.filter((b) => selected.has(`bundle:${b.id}`)).map((b) => b.id),
-          exams: exams.filter((e) => selected.has(`exam:${e.id}`)).map((e) => e.id),
+        const selectedCards = cards.filter((c) => selected.has(`card:${c.id}`)).map((c) => c.id);
+        const selectedBundles = bundles.filter((b) => selected.has(`bundle:${b.id}`)).map((b) => b.id);
+        const selectedExams = exams.filter((e) => selected.has(`exam:${e.id}`)).map((e) => e.id);
+        console.log("[exchange/offer] Building manifest from selected:", {
+          selectedKeys: Array.from(selected),
+          cards: selectedCards,
+          bundles: selectedBundles,
+          exams: selectedExams,
         });
+        const manifest = await buildManifest(db, {
+          cards: selectedCards,
+          bundles: selectedBundles,
+          exams: selectedExams,
+        });
+        console.log("[exchange/offer] Manifest built:", manifest.length, "items", manifest.map(m => `${m.kind}:${m.id} ${m.displayName}`));
         peerActions.send(JSON.stringify({ type: "manifest", items: manifest }));
       }
       sendManifest();

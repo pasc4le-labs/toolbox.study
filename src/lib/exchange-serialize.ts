@@ -152,16 +152,22 @@ export async function serializeSelectedItems(
   const bundleIds = new Set(items.filter(i => i.kind === "bundle").map(i => i.id));
   const examIds = new Set(items.filter(i => i.kind === "exam").map(i => i.id));
 
+  console.log("[exchange/serialize] Input items:", items);
+  console.log("[exchange/serialize] Discovered IDs — cards:", Array.from(cardIds), "bundles:", Array.from(bundleIds), "exams:", Array.from(examIds));
+
   // Auto-include cards from selected bundles so bundles arrive with their cards
   if (bundleIds.size > 0) {
     const bundleCardRows = await db
       .select({ cardId: schema.bundleCards.cardId })
       .from(schema.bundleCards)
       .where(inArray(schema.bundleCards.bundleId, Array.from(bundleIds)));
+    console.log("[exchange/serialize] Bundle card rows from DB:", bundleCardRows);
     for (const row of bundleCardRows) {
       cardIds.add(row.cardId);
     }
   }
+
+  console.log("[exchange/serialize] After auto-include, cardIds:", Array.from(cardIds));
 
   const allCards = cardIds.size > 0
     ? await db.select().from(schema.cards).where(inArray(schema.cards.id, Array.from(cardIds)))
@@ -172,6 +178,8 @@ export async function serializeSelectedItems(
   const allExams = examIds.size > 0
     ? await db.select().from(schema.exams).where(inArray(schema.exams.id, Array.from(examIds)))
     : [];
+
+  console.log("[exchange/serialize] DB results — cards:", allCards.length, "bundles:", allBundles.length, "exams:", allExams.length);
 
   // Cards
   for (const card of allCards) {

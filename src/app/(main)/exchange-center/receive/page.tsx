@@ -49,11 +49,15 @@ export default function ReceivePage() {
       const text = typeof data === "string" ? data : new TextDecoder().decode(data);
       try {
         const msg = JSON.parse(text);
+        console.log("[exchange/rx] Received message type:", msg.type);
         if (msg.type === "manifest") {
-          setManifest(msg as ExchangeManifest);
+          const manifestMsg = msg as ExchangeManifest;
+          console.log("[exchange/rx] Manifest received:", manifestMsg.items.length, "items", manifestMsg.items.map(m => `${m.kind}:${m.id} ${m.displayName}`));
+          setManifest(manifestMsg);
         }
         if (msg.type === "transfer_start") {
           const start = msg as TransferStart;
+          console.log("[exchange/rx] Transfer starting:", start.totalChunks, "chunks expected");
           chunksRef.current = new Array(start.totalChunks).fill("");
           setTotalChunks(start.totalChunks);
           setProgress(0);
@@ -65,10 +69,11 @@ export default function ReceivePage() {
           setProgress((p) => p + 1);
         }
         if (msg.type === "transfer_complete") {
+          console.log("[exchange/rx] Transfer complete, total chunks received:", chunksRef.current.filter(c => c !== "").length, "/", chunksRef.current.length);
           handleTransferComplete();
         }
-      } catch {
-        // ignore
+      } catch (e) {
+        console.warn("[exchange/rx] Failed to parse peer-data:", e);
       }
     }
     window.addEventListener("peer-data", onData);
@@ -78,9 +83,21 @@ export default function ReceivePage() {
   async function handleTransferComplete() {
     try {
       const payload = chunksRef.current.join("");
+      console.log("[exchange/rx] Reassembled payload length:", payload.length);
       const data = JSON.parse(payload);
+      console.log("[exchange/rx] Parsed payload:", {
+        cards: data.cards?.length ?? 0,
+        bundles: data.bundles?.length ?? 0,
+        exams: data.exams?.length ?? 0,
+        cardIds: data.cards?.map((c: any) => c.id),
+        bundleDetails: data.bundles?.map((b: any) => ({ id: b.id, title: b.title, cardIds: b.cardIds })),
+        firstCard: data.cards?.[0],
+        firstBundle: data.bundles?.[0],
+      });
       const { db } = await getDb();
+      console.log("[exchange/rx] Calling importExchangeData...");
       const result = await importExchangeData(db, data);
+      console.log("[exchange/rx] importExchangeData result:", result);
       setImportSummary(result);
       setPhase("done");
       peerActions.send(
@@ -93,6 +110,7 @@ export default function ReceivePage() {
         `Imported ${result.cards} cards, ${result.bundles} bundles, ${result.exams} exams`,
       );
     } catch (err) {
+      console.error("[exchange/rx] Import failed:", err);
       toast.error("Failed to import items: " + (err as Error).message);
       setPhase("connected");
     }
@@ -139,6 +157,7 @@ export default function ReceivePage() {
       const [kind, idStr] = key.split(":");
       return { kind: kind as "card" | "bundle" | "exam", id: parseInt(idStr, 10) };
     });
+    console.log("[exchange/rx] Sending request with items:", items);
     peerActions.send(JSON.stringify({ type: "request", items }));
   };
 
