@@ -16,6 +16,7 @@
     "@ai-sdk/anthropic": "^3.0.79",
     "@ai-sdk/google": "^3.0.79",
     "@ai-sdk/openai-compatible": "^2.0.48",
+    "@iconify/react": "^6.0.2",
     "@remixicon/react": "^4.9.0",
     "ai": "^6.0.191",
     "class-variance-authority": "^0.7.1",

@@ -10,6 +10,7 @@ import {
   RiArrowRightLine,
   RiFlagLine,
 } from "@remixicon/react";
+import { Icon } from "@iconify/react";
 import { Boxed } from "@/components/boxed";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -217,6 +218,49 @@ export default function ExamAttemptPage({ params }: { params: Promise<{ attemptI
     });
   };
 
+  const buildPrompt = () => {
+    if (!current) return "";
+    let prompt = current.front;
+    if (parsedOptions && parsedOptions.length > 0) {
+      const labels = "abcdefghijklmnopqrstuvwxyz";
+      parsedOptions.forEach((opt, i) => {
+        prompt += `\n${labels[i]}. ${opt}`;
+      });
+    }
+    let answerText = "";
+    if (current.type === "multi_radio" && selectedRadio !== null && parsedOptions) {
+      answerText = parsedOptions[selectedRadio] ?? "";
+    } else if (current.type === "multi_select" && parsedOptions) {
+      answerText = selectedCheckboxes.map((i) => parsedOptions[i]).join(", ");
+    } else if (current.type === "open") {
+      answerText = currentAnswer?.answer ?? "";
+    }
+    prompt += `\nAnswer: ${answerText}`;
+    prompt += `\nExplanation: `;
+    return prompt;
+  };
+
+  const openAIProvider = (provider: "chatgpt" | "claude" | "github copilot") => {
+    const prompt = buildPrompt();
+    const encoded = encodeURIComponent(prompt);
+    const urls: Record<string, string> = {
+      chatgpt: `https://chatgpt.com/?q=${encoded}`,
+      claude: `https://claude.ai/new?q=${encoded}`,
+      "github copilot": `https://github.com/copilot?prompt=${encoded}`,
+    };
+    window.open(urls[provider], "_blank", "noopener,noreferrer");
+  };
+
+  const copyPrompt = async () => {
+    const prompt = buildPrompt();
+    try {
+      await navigator.clipboard.writeText(prompt);
+      toast.success("Copied to clipboard");
+    } catch {
+      toast.error("Failed to copy");
+    }
+  };
+
   const handleOpenAnswer = (value: string) => {
     if (!current) return;
     saveAnswer(current.cardId, value || null, null);
@@ -280,6 +324,44 @@ export default function ExamAttemptPage({ params }: { params: Promise<{ attemptI
 
           {current && (
             <div className="flex gap-3">
+              <div className="flex flex-col gap-2">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  title="Ask ChatGPT"
+                  aria-label="Ask ChatGPT"
+                  onClick={() => openAIProvider("chatgpt")}
+                >
+                  <Icon icon="simple-icons:openai" className="size-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  title="Ask Claude"
+                  aria-label="Ask Claude"
+                  onClick={() => openAIProvider("claude")}
+                >
+                  <Icon icon="simple-icons:anthropic" className="size-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  title="Ask GitHub Copilot"
+                  aria-label="Ask GitHub Copilot"
+                  onClick={() => openAIProvider("github copilot")}
+                >
+                  <Icon icon="simple-icons:githubcopilot" className="size-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  title="Copy prompt to clipboard"
+                  aria-label="Copy prompt to clipboard"
+                  onClick={copyPrompt}
+                >
+                  <Icon icon="lucide:copy" className="size-4" />
+                </Button>
+              </div>
               <Card className="flex-1">
                 <CardContent className="py-4">
                   <div className="mb-4">
