@@ -313,10 +313,11 @@ export default function ExamAttemptPage({ params }: { params: Promise<{ attemptI
   };
 
   return (
-    <div className="flex min-h-[calc(100vh-3.5rem)]">
+    <Boxed className="py-8">
+      <div className="flex min-h-[calc(100vh-3.5rem)]">
       {/* Main content */}
       <div className="flex-1 p-6">
-        <div className="mx-auto max-w-3xl">
+        <div className="w-full">
           <div className="mb-6">
             <h1 className="text-2xl font-bold">{exam.title}</h1>
             <div className="mt-2 flex items-center gap-4 text-sm text-muted-foreground">
@@ -556,5 +557,6 @@ export default function ExamAttemptPage({ params }: { params: Promise<{ attemptI
         </SheetContent>
       </Sheet>
     </div>
+    </Boxed>
   );
 }
