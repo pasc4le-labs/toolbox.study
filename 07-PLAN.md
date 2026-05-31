@@ -1,6 +1,6 @@
-# 07 — Bundle Exam Statistics Page Plan
+# 07 — Bundle Exam Statistics Page Plan (Unovis Charts)
 
-> Add a dedicated per-bundle statistics page that shows historical exam performance, attempt history, and card-level weakness analysis so students can track their progress over time.
+> Add a dedicated per-bundle statistics page that shows historical exam performance, attempt history, and card-level weakness analysis so students can track their progress over time. All data visualizations are built with [Unovis](https://unovis.dev/).
 
 ## Conventions
 
@@ -22,6 +22,7 @@
 | **UI patterns** | All pages are `"use client"`, load data in `useEffect` via `getDb()`, show skeletons with `animate-pulse`, use `Boxed`, `Card`, `Button`, `Badge`, `Progress` from `@/components/ui/*`. |
 | **Icons** | `@remixicon/react` — existing imports include `RiBarChartLine`, `RiArrowLeftLine`, `RiHistoryLine`, `RiTrophyLine`, `RiTimeLine`, `RiErrorWarningLine`. |
 | **Routing** | Nested routes under `src/app/(main)/study-dome/bundles/[id]/` already exist (`page.tsx`, `edit/page.tsx`). Adding `stats/page.tsx` follows the exact same convention. |
+| **Charts** | [Unovis](https://unovis.dev/) — modular, framework-agnostic, tree-shakeable. React components from `@unovis/react`, core from `@unovis/ts`. Verified via Brave Search and DeepWiki (f5/unovis). |
 
 ### Key API Signatures (verified from codebase)
 
@@ -55,11 +56,95 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
 
 Verified from `src/app/(main)/study-dome/bundles/[id]/page.tsx` and official docs.
 
+### Unovis React Patterns (verified from unovis.dev docs and DeepWiki)
+
+**Installation:**
+```bash
+pnpm add @unovis/ts @unovis/react
+```
+
+**Line Chart — score over time:**
+```tsx
+import { VisXYContainer, VisLine, VisAxis, VisTooltip } from '@unovis/react'
+import { Line } from '@unovis/ts'
+
+ type AttemptPoint = { index: number; date: string; score: number }
+
+<VisXYContainer data={attempts} height={300}>
+  <VisLine<AttemptPoint>
+    x={useCallback(d => d.index, [])}
+    y={useCallback(d => d.score, [])}
+    lineWidth={2}
+  />
+  <VisAxis type="x" label="Attempt" numTicks={attempts.length} />
+  <VisAxis type="y" label="Score %" domain={[0, 100]} />
+  <VisTooltip
+    triggers={{
+      [Line.selectors.line]: d => `Score: ${Math.round(d.score)}%`,
+    }}
+  />
+</VisXYContainer>
+```
+
+**Stacked Bar Chart — correct vs incorrect per card:**
+```tsx
+import { VisXYContainer, VisStackedBar, VisAxis } from '@unovis/react'
+
+ type WeaknessPoint = { cardFront: string; correct: number; incorrect: number }
+
+<VisXYContainer data={weaknessData} height={300}>
+  <VisStackedBar<WeaknessPoint>
+    x={useCallback(d => d.cardFront, [])}
+    y={[
+      useCallback(d => d.correct, []),
+      useCallback(d => d.incorrect, []),
+    ]}
+    color={['#22c55e', '#ef4444']}
+    roundedCorners={4}
+  />
+  <VisAxis type="x" label="Card" />
+  <VisAxis type="y" label="Answers" />
+</VisXYContainer>
+```
+
+**Donut Chart — overall correctness:**
+```tsx
+import { VisSingleContainer, VisDonut } from '@unovis/react'
+
+ type DonutDatum = { key: string; value: number }
+
+<VisSingleContainer data={donutData} height={200}>
+  <VisDonut<DonutDatum>
+    value={useCallback(d => d.value, [])}
+    centralLabel="Attempts"
+    color={['#22c55e', '#ef4444']}
+  />
+</VisSingleContainer>
+```
+
 ---
 
-## Phase 0 — Project Bootstrap
+## Phase 0 — Install Unovis
 
-> Phase 0 is already completed in prior plans. The repo has a `LICENSE` file and Docker / GitHub Actions are already present. No new scaffolding is needed for this plan.
+### Task 0.1: Add `@unovis/ts` and `@unovis/react`
+
+**What**: Install the Unovis core and React packages.
+
+**Files**: `package.json`, `pnpm-lock.yaml`
+
+**Implementation notes**:
+
+1. Run:
+   ```bash
+   pnpm add @unovis/ts @unovis/react
+   ```
+
+2. Verify `allowSyntheticDefaultImports` is enabled in `tsconfig.json`. If `types` is explicitly specified, add `"topojson-client"` to the list (per Unovis docs).
+
+**Tests**:
+- `pnpm exec tsc --noEmit` passes without type errors.
+
+**Commit**: `feat(deps): add unovis charting library`
 
 ---
 
@@ -223,6 +308,7 @@ export async function getBundleCardWeakness(db: Db, bundleId: number) {
         card: r.cards,
         total,
         incorrect,
+        correct: total - incorrect,
         incorrectRate: total > 0 ? incorrect / total : 0,
       };
     })
@@ -241,11 +327,11 @@ export async function getBundleCardWeakness(db: Db, bundleId: number) {
 
 ---
 
-## Phase 2 — UI: Bundle Statistics Page
+## Phase 2 — UI: Bundle Statistics Page with Unovis Charts
 
 ### Task 2.1: Create `/study-dome/bundles/[id]/stats/page.tsx`
 
-**What**: Build the statistics page that displays summary cards, attempt history, and weak-card analysis for a single bundle.
+**What**: Build the statistics page that displays summary cards, Unovis charts for attempt history and weak-card analysis, and a donut for overall correctness distribution.
 
 **Files**:
 - `src/app/(main)/study-dome/bundles/[id]/stats/page.tsx` (new)
@@ -275,9 +361,9 @@ export default function BundleStatsPage({
 
 2. Mark `"use client"` at the top.
 
-3. Imports to use (all already installed and used elsewhere in the app):
+3. Imports to use (all already installed and used elsewhere in the app, plus Unovis):
    ```tsx
-   import { useState, useEffect, useCallback } from "react";
+   import { useState, useEffect, useCallback, useMemo } from "react";
    import Link from "next/link";
    import { use } from "react";
    import {
@@ -289,6 +375,16 @@ export default function BundleStatsPage({
      RiErrorWarningLine,
      RiPlayLine,
    } from "@remixicon/react";
+   import {
+     VisXYContainer,
+     VisLine,
+     VisStackedBar,
+     VisAxis,
+     VisTooltip,
+     VisSingleContainer,
+     VisDonut,
+   } from "@unovis/react";
+   import { Line } from "@unovis/ts";
    import { Boxed } from "@/components/boxed";
    import { Button } from "@/components/ui/button";
    import { Badge } from "@/components/ui/badge";
@@ -309,23 +405,35 @@ export default function BundleStatsPage({
      - Average Score (icon: `RiBarChartLine`) — show as percentage with `Progress` bar
      - Best Score (icon: `RiTrophyLine`) — show as percentage with green tint
      - Total Time (icon: `RiTimeLine`) — format as "Xm Ys"
-   - **Attempt History** section:
-     - A list of completed attempts. Each item is a `Card` showing:
-       - Exam title
-       - Date (format with `new Date(attempt.startedAt).toLocaleDateString()`)
-       - Score percentage with `Progress` bar colored by score (green ≥70, orange 40–69, red <40)
-       - Time taken in minutes/seconds
-   - **Weak Cards** section:
-     - Only shown if `getBundleCardWeakness` returns items.
-     - Header with `RiErrorWarningLine` icon.
-     - List of cards with:
-       - Card front text (truncated)
-       - `Badge` for card type
-       - "Answered incorrectly X of Y times"
-       - `Progress` bar showing incorrect rate (colored red)
+   - **Score Trend Chart** (`Card`):
+     - Header with `RiHistoryLine` and title "Score Trend".
+     - Uses `VisXYContainer` + `VisLine` + `VisAxis` + `VisTooltip`.
+     - Data: completed attempts mapped to `{ index, date, score }` where `score` is `attempt.score * 100`.
+     - `VisLine` props: `lineWidth={2}`, `curveType="basis"`.
+     - `VisAxis type="x"` with `numTicks={Math.min(attempts.length, 10)}`.
+     - `VisAxis type="y"` with `domain={[0, 100]}` and `label="Score %"`.
+     - `VisTooltip` trigger on `Line.selectors.line` showing attempt date + score.
+     - If only 1 attempt, render a single point or fallback message: "Take more exams to see a trend."
+   - **Overall Correctness Donut** (`Card`, side-by-side on `lg`):
+     - Uses `VisSingleContainer` + `VisDonut`.
+     - Data: `[{ key: 'Correct', value: totalCorrect }, { key: 'Incorrect', value: totalIncorrect }]`.
+     - Colors: `['#22c55e', '#ef4444']`.
+     - `centralLabel` shows total graded answers.
+     - Only shown when `totalCorrect + totalIncorrect > 0`.
+   - **Weak Cards Chart** (`Card`):
+     - Header with `RiErrorWarningLine` and title "Weak Cards".
+     - Uses `VisXYContainer` + `VisStackedBar` + `VisAxis`.
+     - Data: top 10 weak cards mapped to `{ cardFront: truncate(card.front, 20), correct, incorrect }`.
+     - `VisStackedBar` props:
+       - `x={d => d.cardFront}`
+       - `y={[d => d.correct, d => d.incorrect]}`
+       - `color={['#22c55e', '#ef4444']}`
+       - `roundedCorners={4}`
+     - `VisAxis type="x"` label "Card" (rotate labels if needed via CSS to prevent overlap).
+     - `VisAxis type="y"` label "Answers".
      - If no weakness data, show "All cards are performing well — no weak spots detected."
 
-7. Score color logic:
+7. Score color logic (reused for summary cards):
    ```tsx
    function scoreColorClass(score: number) {
      if (score >= 0.7) return "text-green-600";
@@ -334,7 +442,7 @@ export default function BundleStatsPage({
    }
    ```
 
-8. Time formatting helper (reuse the one from results page or inline):
+8. Time formatting helper:
    ```tsx
    function formatDuration(totalSeconds: number) {
      const m = Math.floor(totalSeconds / 60);
@@ -343,12 +451,16 @@ export default function BundleStatsPage({
    }
    ```
 
+9. **Memoize chart data** with `useMemo` to avoid re-computing on every render.
+
+10. **CSS**: Unovis charts respect CSS variables. If the app uses dark mode, set `--vis-color-grey` or related variables in the page scope if needed. Default styling is acceptable for first pass.
+
 **Tests**:
 - E2E coverage in Phase 3.
 - **Manual verification**: Navigate to stats page for a bundle with 0 exams → empty state renders.
-- **Manual verification**: Navigate to stats page for a bundle with 1 completed attempt → summary cards show correct values, attempt history shows the attempt, weak cards section shows card(s) if any were incorrect.
+- **Manual verification**: Navigate to stats page for a bundle with 1 completed attempt → summary cards show correct values, donut shows correct/incorrect, score trend renders, weak cards section shows card(s) if any were incorrect.
 
-**Commit**: `feat(stats): add bundle exam statistics page`
+**Commit**: `feat(stats): add bundle exam statistics page with unovis charts`
 
 ---
 
@@ -385,7 +497,7 @@ export default function BundleStatsPage({
 
 ### Task 3.1: E2E test — bundle exam statistics flow
 
-**What**: Add a Playwright E2E test that creates cards, bundles them, takes an exam with mixed correctness, and verifies the statistics page reflects the expected data.
+**What**: Add a Playwright E2E test that creates cards, bundles them, takes an exam with mixed correctness, and verifies the statistics page reflects the expected data and renders Unovis charts.
 
 **Files**: `e2e/bundle-stats.spec.ts` (new)
 
@@ -403,7 +515,7 @@ test.beforeEach(async ({ page }) => {
   await clearIndexedDB(page);
 });
 
-test("bundle stats page shows exam history and weak cards", async ({ page }) => {
+test("bundle stats page shows charts and weak cards", async ({ page }) => {
   // 1. Create 3 multi_radio cards (same as exam-flow.spec.ts)
   for (let i = 1; i <= 3; i++) {
     await page.goto("/study-dome/cards/new");
@@ -461,19 +573,16 @@ test("bundle stats page shows exam history and weak cards", async ({ page }) => 
   await page.waitForTimeout(500);
 
   // 5. Answer questions: correct, incorrect, correct
-  // Q1 — correct (option A, index 0)
   await page.locator("label[id^='q-opt-']").nth(0).click();
   await page.waitForTimeout(200);
   await page.locator("button:has-text('Next')").click();
   await page.waitForTimeout(300);
 
-  // Q2 — incorrect (option B, index 1)
   await page.locator("label[id^='q-opt-']").nth(1).click();
   await page.waitForTimeout(200);
   await page.locator("button:has-text('Next')").click();
   await page.waitForTimeout(300);
 
-  // Q3 — correct (option A, index 0)
   await page.locator("label[id^='q-opt-']").nth(0).click();
   await page.waitForTimeout(200);
   await page.locator("button:has-text('Submit Exam')").click();
@@ -491,8 +600,9 @@ test("bundle stats page shows exam history and weak cards", async ({ page }) => 
   await expect(page.getByText("1").first()).toBeVisible();
   // Average score should be 67% (2/3 correct)
   await expect(page.getByText(/67/)).toBeVisible();
-  // Attempt history section visible
-  await expect(page.getByText("Attempt History")).toBeVisible();
+  // Charts visible (Unovis renders SVGs; check for svg elements inside cards)
+  await expect(page.locator("text=Score Trend")).toBeVisible();
+  await expect(page.locator("svg").first()).toBeVisible();
   // Weak cards section should show the incorrectly answered card
   await expect(page.getByText("Weak Cards")).toBeVisible();
   await expect(page.getByText("Question 2")).toBeVisible();
@@ -502,6 +612,7 @@ test("bundle stats page shows exam history and weak cards", async ({ page }) => 
 3. Notes on selectors:
    - The exam page uses labels with `id="q-opt-{index}"` for options. Verify this by checking `src/app/(main)/study-dome/exams/[attemptId]/page.tsx` if the test fails — adjust selector accordingly.
    - If the exact label `id` prefix differs, use `page.locator("label").nth(0)` instead.
+   - Unovis renders SVG charts; asserting on `page.locator("svg").first()` is sufficient to verify charts mounted.
 
 **Tests**:
 - Run `pnpm exec playwright test e2e/bundle-stats.spec.ts` and ensure it passes.
@@ -524,7 +635,7 @@ test("bundle stats page shows exam history and weak cards", async ({ page }) => 
 1. Add a short subsection under the Study Dome heading (or create one if it doesn't exist) describing:
    - Route: `/study-dome/bundles/[id]/stats`
    - Data sources: `getBundleExamStats` and `getBundleCardWeakness`
-   - What is shown: summary aggregates, attempt history, per-card weakness analysis
+   - Charts: Unovis (`@unovis/react`) — line chart for score trend, stacked bar for weak-card analysis, donut for overall correctness.
    - Purpose: helps students track exam performance over time and identify cards that need more review
 
 2. Keep it brief — one short paragraph is enough.
@@ -535,10 +646,16 @@ test("bundle stats page shows exam history and weak cards", async ({ page }) => 
 
 ## Execution Checklist
 
+- [ ] Phase 0 — Unovis installed (`@unovis/ts`, `@unovis/react`).
+- [ ] Phase 1 — `getBundleExamStats` and `getBundleCardWeakness` added to `db-queries.ts`.
+- [ ] Phase 2 — Stats page created with Unovis charts (line, stacked bar, donut) and summary cards.
+- [ ] Phase 2 — Statistics link added to bundle detail page.
+- [ ] Phase 3 — Playwright E2E test passes.
+- [ ] Phase 4 — Architecture docs updated.
 - [x] License: already present (`LICENSE` file committed).
 - [x] Docker/CI: already present (`.github/workflows/`, `docker-compose.yml`).
-- [x] Research phase completed — Next.js 16 params pattern verified, Drizzle ORM join patterns verified from existing `db-queries.ts`, schema verified from `src/db/schema.ts`.
-- [x] Every library reference traces to source: Drizzle APIs from existing code, Remix icons from existing imports, Next.js patterns from `node_modules/next/dist/docs/`.
+- [x] Research phase completed — Next.js 16 params pattern verified, Drizzle ORM join patterns verified from existing `db-queries.ts`, schema verified from `src/db/schema.ts`, Unovis APIs verified from official docs and DeepWiki.
+- [x] Every library reference traces to source: Drizzle APIs from existing code, Remix icons from existing imports, Next.js patterns from `node_modules/next/dist/docs/`, Unovis patterns from `unovis.dev/docs` and DeepWiki `f5/unovis`.
 - [x] Every task has a **Tests** subsection.
 - [x] E2E testing phase exists with concrete scenario.
 - [x] Every task ends with a **Commit** line.

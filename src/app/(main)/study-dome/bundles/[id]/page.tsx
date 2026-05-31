@@ -12,6 +12,7 @@ import {
   RiArrowDownSLine,
   RiArrowUpSLine,
   RiPlayLine,
+  RiBarChartLine,
 } from "@remixicon/react";
 import { Boxed } from "@/components/boxed";
 import { Button } from "@/components/ui/button";
@@ -370,6 +371,12 @@ export default function BundleDetailPage({ params }: { params: Promise<{ id: str
           <Button variant="outline" onClick={openAddDialog}>
             <RiAddLine className="mr-2 h-4 w-4" />
             Add Cards
+          </Button>
+          <Button variant="ghost" asChild>
+            <Link href={`/study-dome/bundles/${bundleId}/stats`}>
+              <RiBarChartLine className="mr-2 h-4 w-4" />
+              Statistics
+            </Link>
           </Button>
         </div>
       </div>

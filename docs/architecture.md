@@ -67,6 +67,21 @@ for (const answer of answered) {
 await persistNow();
 ```
 
+## Bundle Exam Statistics
+
+The bundle statistics page at `/study-dome/bundles/[id]/stats` provides students with visual performance tracking.
+
+**Data sources:**
+- `getBundleExamStats` — returns all exam attempts for a bundle with computed aggregates (avg/best/worst score, total time)
+- `getBundleCardWeakness` — returns per-card correct/incorrect counts from graded exam answers, sorted by highest incorrect rate
+
+**Visualizations** (powered by [Unovis](https://unovis.dev/) `@unovis/react`):
+- **Line chart** — score trend over attempts (shows progress over time)
+- **Donut chart** — overall correct vs. incorrect answer distribution
+- **Stacked bar chart** — weak cards analysis, sorted by highest incorrect rate
+
+**Summary cards** — total attempts, average score (with progress bar), best/worst score, total time spent.
+
 ## Relay
 
 A standalone Go binary in `relay/`:

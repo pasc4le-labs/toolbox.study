@@ -863,3 +863,126 @@ export async function getCardBundles(db: Db, cardId: number) {
     .innerJoin(schema.bundles, eq(schema.bundleCards.bundleId, schema.bundles.id))
     .where(eq(schema.bundleCards.cardId, cardId));
 }
+
+// ── Bundle exam statistics ──
+
+export async function getBundleExamStats(db: Db, bundleId: number) {
+  const bundleExams = await db
+    .select()
+    .from(schema.exams)
+    .where(eq(schema.exams.bundleId, bundleId))
+    .orderBy(asc(schema.exams.createdAt));
+
+  if (bundleExams.length === 0) {
+    return {
+      exams: [],
+      attempts: [],
+      totalAttempts: 0,
+      completedAttempts: 0,
+      avgScore: 0,
+      bestScore: 0,
+      worstScore: 0,
+      totalTimeSeconds: 0,
+    };
+  }
+
+  const examIds = bundleExams.map((e) => e.id);
+
+  const attempts = await db
+    .select({
+      attempt: schema.examAttempts,
+      exam: schema.exams,
+    })
+    .from(schema.examAttempts)
+    .innerJoin(schema.exams, eq(schema.examAttempts.examId, schema.exams.id))
+    .where(inArray(schema.examAttempts.examId, examIds))
+    .orderBy(asc(schema.examAttempts.startedAt));
+
+  const completed = attempts.filter((a) => a.attempt.completedAt != null);
+
+  // All scores: unfinished attempts count as 0
+  const allScores = attempts.map((a) => (a.attempt.completedAt != null ? (a.attempt.score ?? 0) : 0));
+
+  const totalTimeSeconds = completed.reduce((sum, a) => {
+    if (!a.attempt.completedAt || !a.attempt.startedAt) return sum;
+    return sum + Math.round((a.attempt.completedAt - a.attempt.startedAt) / 1000);
+  }, 0);
+
+  return {
+    exams: bundleExams,
+    attempts,
+    totalAttempts: attempts.length,
+    completedAttempts: completed.length,
+    avgScore: allScores.length > 0 ? allScores.reduce((a, b) => a + b, 0) / allScores.length : 0,
+    bestScore: allScores.length > 0 ? Math.max(...allScores) : 0,
+    worstScore: allScores.length > 0 ? Math.min(...allScores) : 0,
+    totalTimeSeconds,
+  };
+}
+
+export async function getBundleCardWeakness(db: Db, bundleId: number) {
+  const cardsInBundle = await db
+    .select()
+    .from(schema.bundleCards)
+    .innerJoin(schema.cards, eq(schema.bundleCards.cardId, schema.cards.id))
+    .where(eq(schema.bundleCards.bundleId, bundleId));
+
+  if (cardsInBundle.length === 0) return [];
+
+  const cardIds = cardsInBundle.map((r) => r.cards.id);
+
+  // Total graded answers per card (exclude ungraded / open answers where isCorrect is NULL)
+  const totalAnswers = await db
+    .select({
+      cardId: schema.examAnswers.cardId,
+      total: sql<number>`COUNT(*)`,
+    })
+    .from(schema.examAnswers)
+    .innerJoin(schema.examAttempts, eq(schema.examAnswers.attemptId, schema.examAttempts.id))
+    .innerJoin(schema.exams, eq(schema.examAttempts.examId, schema.exams.id))
+    .where(
+      and(
+        eq(schema.exams.bundleId, bundleId),
+        inArray(schema.examAnswers.cardId, cardIds),
+        sql`${schema.examAnswers.isCorrect} IS NOT NULL`,
+      ),
+    )
+    .groupBy(schema.examAnswers.cardId);
+
+  // Incorrect answers per card
+  const incorrectAnswers = await db
+    .select({
+      cardId: schema.examAnswers.cardId,
+      incorrect: sql<number>`COUNT(*)`,
+    })
+    .from(schema.examAnswers)
+    .innerJoin(schema.examAttempts, eq(schema.examAnswers.attemptId, schema.examAttempts.id))
+    .innerJoin(schema.exams, eq(schema.examAttempts.examId, schema.exams.id))
+    .where(
+      and(
+        eq(schema.exams.bundleId, bundleId),
+        inArray(schema.examAnswers.cardId, cardIds),
+        eq(schema.examAnswers.isCorrect, false),
+      ),
+    )
+    .groupBy(schema.examAnswers.cardId);
+
+  const totalMap = new Map(totalAnswers.map((r) => [r.cardId, r.total]));
+  const incorrectMap = new Map(incorrectAnswers.map((r) => [r.cardId, r.incorrect]));
+  const cardMap = new Map(cardsInBundle.map((r) => [r.cards.id, r.cards]));
+
+  return cardsInBundle
+    .map((r) => {
+      const total = totalMap.get(r.cards.id) ?? 0;
+      const incorrect = incorrectMap.get(r.cards.id) ?? 0;
+      return {
+        card: r.cards,
+        total,
+        incorrect,
+        correct: total - incorrect,
+        incorrectRate: total > 0 ? incorrect / total : 0,
+      };
+    })
+    .filter((r) => r.total > 0)
+    .sort((a, b) => b.incorrectRate - a.incorrectRate);
+}
