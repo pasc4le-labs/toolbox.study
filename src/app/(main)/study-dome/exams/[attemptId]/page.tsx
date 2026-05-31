@@ -228,12 +228,14 @@ export default function ExamAttemptPage({ params }: { params: Promise<{ attemptI
       });
     }
     let answerText = "";
-    if (current.type === "multi_radio" && selectedRadio !== null && parsedOptions) {
-      answerText = parsedOptions[selectedRadio] ?? "";
-    } else if (current.type === "multi_select" && parsedOptions) {
-      answerText = selectedCheckboxes.map((i) => parsedOptions[i]).join(", ");
-    } else if (current.type === "open") {
-      answerText = currentAnswer?.answer ?? "";
+    if (
+      (current.type === "multi_radio" || current.type === "multi_select") &&
+      parsedCorrect &&
+      parsedOptions
+    ) {
+      answerText = parsedCorrect.map((i) => parsedOptions[i]).join(", ");
+    } else {
+      answerText = current.back ?? "";
     }
     prompt += `\nAnswer: ${answerText}`;
     prompt += `\nExplanation: ${current.explanation ?? ""}`;
