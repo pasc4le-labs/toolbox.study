@@ -236,17 +236,18 @@ export default function ExamAttemptPage({ params }: { params: Promise<{ attemptI
       answerText = currentAnswer?.answer ?? "";
     }
     prompt += `\nAnswer: ${answerText}`;
-    prompt += `\nExplanation: `;
+    prompt += `\nExplanation: ${current.explanation ?? ""}`;
     return prompt;
   };
 
-  const openAIProvider = (provider: "chatgpt" | "claude" | "github copilot") => {
+  const openAIProvider = (provider: "chatgpt" | "claude" | "github copilot" | "kimi") => {
     const prompt = buildPrompt();
     const encoded = encodeURIComponent(prompt);
     const urls: Record<string, string> = {
       chatgpt: `https://chatgpt.com/?q=${encoded}`,
       claude: `https://claude.ai/new?q=${encoded}`,
       "github copilot": `https://github.com/copilot?prompt=${encoded}`,
+      kimi: `https://www.kimi.com/?prefill_prompt=${encoded}`,
     };
     window.open(urls[provider], "_blank", "noopener,noreferrer");
   };
@@ -351,6 +352,15 @@ export default function ExamAttemptPage({ params }: { params: Promise<{ attemptI
                   onClick={() => openAIProvider("github copilot")}
                 >
                   <Icon icon="simple-icons:githubcopilot" className="size-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  title="Ask Kimi"
+                  aria-label="Ask Kimi"
+                  onClick={() => openAIProvider("kimi")}
+                >
+                  <Icon icon="simple-icons:moonshotai" className="size-4" />
                 </Button>
                 <Button
                   variant="outline"
