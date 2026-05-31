@@ -24,6 +24,11 @@ export async function importExchangeData(
       title: string;
       description: string | null;
       cardIds: number[];
+      examQuestionCount?: number | null;
+      examTimeLimitSeconds?: number | null;
+      examDifficultyFilter?: number | null;
+      examPointsPerCorrect?: number | null;
+      examPointsPerWrong?: number | null;
     }>;
     exams: Array<{
       id: number;
@@ -32,6 +37,8 @@ export async function importExchangeData(
       questionCount: number;
       timeLimitSeconds: number | null;
       difficultyFilter: number | null;
+      pointsPerCorrect?: number;
+      pointsPerWrong?: number;
     }>;
   },
 ): Promise<{ cards: number; bundles: number; exams: number }> {
@@ -84,6 +91,20 @@ export async function importExchangeData(
       description: bundleData.description,
     });
 
+    // Set exam settings on the bundle
+    if (bundleData.examQuestionCount != null || bundleData.examTimeLimitSeconds != null ||
+        bundleData.examDifficultyFilter != null || bundleData.examPointsPerCorrect != null ||
+        bundleData.examPointsPerWrong != null) {
+      const { updateBundle } = await import("@/lib/db-queries");
+      await updateBundle(db, newBundle.id, {
+        examQuestionCount: bundleData.examQuestionCount ?? null,
+        examTimeLimitSeconds: bundleData.examTimeLimitSeconds ?? null,
+        examDifficultyFilter: bundleData.examDifficultyFilter ?? null,
+        examPointsPerCorrect: bundleData.examPointsPerCorrect ?? null,
+        examPointsPerWrong: bundleData.examPointsPerWrong ?? null,
+      });
+    }
+
     // Map old card IDs to new card IDs and add to bundle
     const newCardIds = bundleData.cardIds
       .map((oldId) => cardIdMap.get(oldId))
@@ -115,6 +136,8 @@ export async function importExchangeData(
       questionCount: examData.questionCount,
       timeLimitSeconds: examData.timeLimitSeconds,
       difficultyFilter: examData.difficultyFilter,
+      pointsPerCorrect: examData.pointsPerCorrect ?? 1,
+      pointsPerWrong: examData.pointsPerWrong ?? 0,
       createdAt: Date.now(),
     });
     examsImported++;

@@ -97,6 +97,11 @@ export async function serializeSelectedItems(
     title: string;
     description: string | null;
     cardIds: number[];
+    examQuestionCount: number | null;
+    examTimeLimitSeconds: number | null;
+    examDifficultyFilter: number | null;
+    examPointsPerCorrect: number | null;
+    examPointsPerWrong: number | null;
   }>;
   exams: Array<{
     id: number;
@@ -105,6 +110,8 @@ export async function serializeSelectedItems(
     questionCount: number;
     timeLimitSeconds: number | null;
     difficultyFilter: number | null;
+    pointsPerCorrect: number;
+    pointsPerWrong: number;
   }>;
 }> {
   const result = {
@@ -123,6 +130,11 @@ export async function serializeSelectedItems(
       title: string;
       description: string | null;
       cardIds: number[];
+      examQuestionCount: number | null;
+      examTimeLimitSeconds: number | null;
+      examDifficultyFilter: number | null;
+      examPointsPerCorrect: number | null;
+      examPointsPerWrong: number | null;
     }>,
     exams: [] as Array<{
       id: number;
@@ -131,6 +143,8 @@ export async function serializeSelectedItems(
       questionCount: number;
       timeLimitSeconds: number | null;
       difficultyFilter: number | null;
+      pointsPerCorrect: number;
+      pointsPerWrong: number;
     }>,
   };
 
@@ -181,6 +195,11 @@ export async function serializeSelectedItems(
       title: bundle.title,
       description: bundle.description,
       cardIds: bc.map((r) => r.cardId),
+      examQuestionCount: bundle.examQuestionCount,
+      examTimeLimitSeconds: bundle.examTimeLimitSeconds,
+      examDifficultyFilter: bundle.examDifficultyFilter,
+      examPointsPerCorrect: bundle.examPointsPerCorrect,
+      examPointsPerWrong: bundle.examPointsPerWrong,
     });
   }
 
@@ -193,6 +212,8 @@ export async function serializeSelectedItems(
       questionCount: exam.questionCount,
       timeLimitSeconds: exam.timeLimitSeconds,
       difficultyFilter: exam.difficultyFilter,
+      pointsPerCorrect: exam.pointsPerCorrect,
+      pointsPerWrong: exam.pointsPerWrong,
     });
   }
 

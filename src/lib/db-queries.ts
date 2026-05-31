@@ -192,7 +192,15 @@ export async function createBundle(db: Db, data: { title: string; description?: 
   return bundle ?? null;
 }
 
-export async function updateBundle(db: Db, id: number, data: { title?: string; description?: string | null }) {
+export async function updateBundle(db: Db, id: number, data: {
+  title?: string;
+  description?: string | null;
+  examQuestionCount?: number | null;
+  examTimeLimitSeconds?: number | null;
+  examDifficultyFilter?: number | null;
+  examPointsPerCorrect?: number | null;
+  examPointsPerWrong?: number | null;
+}) {
   await db.update(schema.bundles).set(data).where(eq(schema.bundles.id, id));
   await persistNow();
 }
@@ -426,6 +434,8 @@ export async function createExam(
     questionCount: number;
     timeLimitSeconds?: number | null;
     difficultyFilter?: number | null;
+    pointsPerCorrect?: number;
+    pointsPerWrong?: number;
   },
 ) {
   const [exam] = await db
@@ -436,6 +446,8 @@ export async function createExam(
       questionCount: data.questionCount,
       timeLimitSeconds: data.timeLimitSeconds ?? null,
       difficultyFilter: data.difficultyFilter ?? null,
+      pointsPerCorrect: data.pointsPerCorrect ?? 1,
+      pointsPerWrong: data.pointsPerWrong ?? 0,
     })
     .returning();
   return exam ?? null;
@@ -599,18 +611,34 @@ export async function getExamAnswers(db: Db, attemptId: number) {
 }
 
 export async function completeExamAttempt(db: Db, attemptId: number) {
+  const [attempt] = await db
+    .select()
+    .from(schema.examAttempts)
+    .where(eq(schema.examAttempts.id, attemptId))
+    .limit(1);
+
+  if (!attempt) throw new Error('Attempt not found');
+
+  const exam = await getExamById(db, attempt.examId);
+  if (!exam) throw new Error('Exam not found');
+
   const answers = await getExamAnswers(db, attemptId);
   const answered = answers.filter((a) => a.isCorrect !== null);
-  const score = answered.length > 0
-    ? answered.filter((a) => a.isCorrect).length / answered.length
-    : 0;
+
+  const pointsPerCorrect = exam.pointsPerCorrect ?? 1;
+  const pointsPerWrong = exam.pointsPerWrong ?? 0;
+
+  const correctCount = answered.filter((a) => a.isCorrect).length;
+  const wrongCount = answered.filter((a) => a.isCorrect === false).length;
+  const totalPoints = correctCount * pointsPerCorrect + wrongCount * pointsPerWrong;
+  const maxPoints = answered.length * pointsPerCorrect;
+
+  // score normalized 0-1 (clamped to 0 if negative scoring)
+  const score = maxPoints > 0 ? Math.max(0, totalPoints / maxPoints) : 0;
 
   await db
     .update(schema.examAttempts)
-    .set({
-      completedAt: Date.now(),
-      score,
-    })
+    .set({ completedAt: Date.now(), score })
     .where(eq(schema.examAttempts.id, attemptId));
 
   return score;

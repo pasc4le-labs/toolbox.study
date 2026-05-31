@@ -15,6 +15,13 @@
       "when": 1779814444576,
       "tag": "20260526165404_wandering_paibok",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1780245112005,
+      "tag": "20260531163152_new_gorgon",
+      "breakpoints": true
     }
   ]
 }

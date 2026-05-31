@@ -9,6 +9,8 @@ import {
   RiDeleteBinLine,
   RiArrowUpLine,
   RiArrowDownLine,
+  RiArrowDownSLine,
+  RiArrowUpSLine,
   RiPlayLine,
 } from "@remixicon/react";
 import { Boxed } from "@/components/boxed";
@@ -27,6 +29,11 @@ import {
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { getDb } from "@/db";
 import {
   getBundleById,
@@ -37,6 +44,7 @@ import {
   getAllCards,
   createExam,
   startExamAttempt,
+  updateBundle,
 } from "@/lib/db-queries";
 import { toast } from "sonner";
 
@@ -56,6 +64,9 @@ export default function BundleDetailPage({ params }: { params: Promise<{ id: str
   const [questionCount, setQuestionCount] = useState(5);
   const [timeLimitMinutes, setTimeLimitMinutes] = useState(0);
   const [difficultyFilter, setDifficultyFilter] = useState(0);
+  const [advancedOpen, setAdvancedOpen] = useState(false);
+  const [pointsPerCorrect, setPointsPerCorrect] = useState(1);
+  const [pointsPerWrong, setPointsPerWrong] = useState(0);
   const [creatingExam, setCreatingExam] = useState(false);
 
   const load = useCallback(async () => {
@@ -137,12 +148,24 @@ export default function BundleDetailPage({ params }: { params: Promise<{ id: str
     setCreatingExam(true);
     try {
       const { db } = await getDb();
+
+      // Save exam settings to bundle for next time
+      await updateBundle(db, bundleId, {
+        examQuestionCount: questionCount,
+        examTimeLimitSeconds: timeLimitMinutes > 0 ? timeLimitMinutes * 60 : null,
+        examDifficultyFilter: difficultyFilter / 100,
+        examPointsPerCorrect: pointsPerCorrect,
+        examPointsPerWrong: pointsPerWrong,
+      });
+
       const exam = await createExam(db, {
         title: examTitle || `${bundle.title} Exam`,
         bundleId,
         questionCount,
         timeLimitSeconds: timeLimitMinutes > 0 ? timeLimitMinutes * 60 : null,
         difficultyFilter: difficultyFilter / 100,
+        pointsPerCorrect,
+        pointsPerWrong,
       });
       if (!exam) throw new Error("Failed to create exam");
       const { attempt } = await startExamAttempt(db, exam.id);
@@ -200,7 +223,18 @@ export default function BundleDetailPage({ params }: { params: Promise<{ id: str
           </p>
         </div>
         <div className="flex gap-2">
-          <Dialog open={examDialogOpen} onOpenChange={setExamDialogOpen}>
+          <Dialog open={examDialogOpen} onOpenChange={(open) => {
+            setExamDialogOpen(open);
+            if (open && bundle) {
+              setExamTitle(bundle.title + " Exam");
+              setQuestionCount(bundle.examQuestionCount ?? Math.min(5, cards.length));
+              setTimeLimitMinutes(bundle.examTimeLimitSeconds ? bundle.examTimeLimitSeconds / 60 : 0);
+              setDifficultyFilter(Math.round((bundle.examDifficultyFilter ?? 0) * 100));
+              setPointsPerCorrect(bundle.examPointsPerCorrect ?? 1);
+              setPointsPerWrong(bundle.examPointsPerWrong ?? 0);
+              setAdvancedOpen(false);
+            }
+          }}>
             <DialogTrigger asChild>
               <Button disabled={cards.length === 0}>
                 <RiPlayLine className="mr-2 h-4 w-4" />
@@ -224,38 +258,105 @@ export default function BundleDetailPage({ params }: { params: Promise<{ id: str
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Questions: {questionCount} / {cards.length}</Label>
-                  <Slider
-                    value={[questionCount]}
-                    onValueChange={([v]) => setQuestionCount(v)}
-                    min={1}
-                    max={Math.max(1, cards.length)}
-                    step={1}
-                  />
+                  <Label>Questions</Label>
+                  <div className="flex items-center gap-4">
+                    <Slider
+                      value={[questionCount]}
+                      onValueChange={([v]) => setQuestionCount(v)}
+                      min={1}
+                      max={Math.max(1, cards.length)}
+                      step={1}
+                      className="flex-1"
+                    />
+                    <Input
+                      type="number"
+                      min={1}
+                      max={Math.max(1, cards.length)}
+                      value={Number.isNaN(questionCount) ? 1 : questionCount}
+                      onChange={(e) => {
+                        const raw = parseInt(e.target.value);
+                        setQuestionCount(isNaN(raw) ? 1 : Math.min(Math.max(1, raw), cards.length));
+                      }}
+                      className="w-16 text-center"
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">{cards.length} cards available</p>
                 </div>
                 <div className="space-y-2">
-                  <Label>Time Limit: {timeLimitMinutes === 0 ? "No limit" : `${timeLimitMinutes} min`}</Label>
-                  <Slider
-                    value={[timeLimitMinutes]}
-                    onValueChange={([v]) => setTimeLimitMinutes(v)}
-                    min={0}
-                    max={120}
-                    step={5}
-                  />
+                  <Label>Time Limit (minutes)</Label>
+                  <div className="flex items-center gap-4">
+                    <Slider
+                      value={[timeLimitMinutes]}
+                      onValueChange={([v]) => setTimeLimitMinutes(v)}
+                      min={0}
+                      max={120}
+                      step={5}
+                      className="flex-1"
+                    />
+                    <Input
+                      type="number"
+                      min={0}
+                      max={180}
+                      value={Number.isNaN(timeLimitMinutes) ? 0 : timeLimitMinutes}
+                      onChange={(e) => {
+                        const raw = parseInt(e.target.value);
+                        setTimeLimitMinutes(isNaN(raw) ? 0 : Math.max(0, raw));
+                      }}
+                      className="w-16 text-center"
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">{timeLimitMinutes === 0 ? "No time limit" : `${timeLimitMinutes} minute${timeLimitMinutes !== 1 ? "s" : ""}`}</p>
                 </div>
-                <div className="space-y-2">
-                  <Label>Focus on weak cards: {difficultyFilter}%</Label>
-                  <Slider
-                    value={[difficultyFilter]}
-                    onValueChange={([v]) => setDifficultyFilter(v)}
-                    min={0}
-                    max={100}
-                    step={10}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    0% = random selection, 100% = only weakest cards
-                  </p>
-                </div>
+
+                <Collapsible open={advancedOpen} onOpenChange={setAdvancedOpen}>
+                  <CollapsibleTrigger asChild>
+                    <Button variant="ghost" className="w-full justify-between">
+                      <span>Advanced Options</span>
+                      {advancedOpen ? <RiArrowUpSLine className="h-4 w-4" /> : <RiArrowDownSLine className="h-4 w-4" />}
+                    </Button>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="space-y-4 pt-2">
+                    <div className="space-y-2">
+                      <Label>Points per correct answer</Label>
+                      <Input
+                        type="number"
+                        min={0}
+                        step={0.5}
+                        value={Number.isNaN(pointsPerCorrect) ? 1 : pointsPerCorrect}
+                        onChange={(e) => {
+                          const raw = parseFloat(e.target.value);
+                          setPointsPerCorrect(isNaN(raw) ? 1 : Math.max(0, raw));
+                        }}
+                      />
+                      <p className="text-xs text-muted-foreground">Default: 1 point</p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Negative points per wrong answer</Label>
+                      <Input
+                        type="number"
+                        max={0}
+                        step={0.25}
+                        value={Number.isNaN(pointsPerWrong) ? 0 : pointsPerWrong}
+                        onChange={(e) => {
+                          const raw = parseFloat(e.target.value);
+                          setPointsPerWrong(isNaN(raw) ? 0 : Math.min(0, raw));
+                        }}
+                      />
+                      <p className="text-xs text-muted-foreground">Penalty for incorrect answers. Use 0 for no penalty, negative values (e.g. -0.25) to penalize.</p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Focus on weak cards: {difficultyFilter}%</Label>
+                      <Slider
+                        value={[difficultyFilter]}
+                        onValueChange={([v]) => setDifficultyFilter(v)}
+                        min={0}
+                        max={100}
+                        step={10}
+                      />
+                      <p className="text-xs text-muted-foreground">0% = random, 100% = only weakest cards</p>
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
               </div>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setExamDialogOpen(false)}>Cancel</Button>

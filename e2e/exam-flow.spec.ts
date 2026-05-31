@@ -77,6 +77,13 @@ test("create a bundle, create exam, take it, and see results", async ({ page }) 
   const examDialog = page.getByRole("dialog");
   await expect(examDialog).toBeVisible({ timeout: 5000 });
 
+  // Verify Advanced Options collapsible is present
+  await expect(examDialog.getByText("Advanced Options")).toBeVisible();
+
+  // Verify input+slider combo for questions
+  const questionInput = examDialog.locator('input[type="number"]').first();
+  await expect(questionInput).toBeVisible();
+
   // Start exam with defaults
   await examDialog.getByRole("button", { name: "Start Exam" }).click();
 

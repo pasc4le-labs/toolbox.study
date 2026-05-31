@@ -48,6 +48,11 @@ export const bundles = sqliteTable('bundles', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   title: text('title').notNull(),
   description: text('description'),
+  examQuestionCount: integer('exam_question_count'),         // default question count for exams
+  examTimeLimitSeconds: integer('exam_time_limit_seconds'),   // default time limit
+  examDifficultyFilter: real('exam_difficulty_filter'),       // default difficulty filter (0-1)
+  examPointsPerCorrect: real('exam_points_per_correct'),      // default points per correct answer
+  examPointsPerWrong: real('exam_points_per_wrong'),          // default negative points per wrong answer
   createdAt: integer('created_at').notNull().default(Date.now()),
 });
 
@@ -115,6 +120,8 @@ export const exams = sqliteTable('exams', {
   questionCount: integer('question_count').notNull(),
   timeLimitSeconds: integer('time_limit_seconds'),    // null = no timer
   difficultyFilter: real('difficulty_filter'),          // 0-1 slider: % of low-scoring cards to include. null = random.
+  pointsPerCorrect: real('points_per_correct').notNull().default(1),
+  pointsPerWrong: real('points_per_wrong').notNull().default(0),
   createdAt: integer('created_at').notNull().default(Date.now()),
 });
 

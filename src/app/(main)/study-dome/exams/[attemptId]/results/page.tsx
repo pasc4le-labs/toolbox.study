@@ -57,7 +57,16 @@ export default function ExamResultsPage({ params }: { params: Promise<{ attemptI
   const { attempt, exam, answers } = results;
   const scorePct = attempt.score != null ? Math.round(attempt.score * 100) : 0;
   const totalQuestions = answers.length;
+
+  const pointsPerCorrect = exam?.pointsPerCorrect ?? 1;
+  const pointsPerWrong = exam?.pointsPerWrong ?? 0;
+
   const correctCount = answers.filter((a) => a.isCorrect).length;
+  const wrongCount = answers.filter((a) => a.isCorrect === false).length;
+
+  const totalEarned = correctCount * pointsPerCorrect + wrongCount * pointsPerWrong;
+  const maxPossible = answers.length * pointsPerCorrect;
+
   const timeTaken = attempt.completedAt && attempt.startedAt
     ? Math.round((attempt.completedAt - attempt.startedAt) / 1000)
     : 0;
@@ -93,6 +102,11 @@ export default function ExamResultsPage({ params }: { params: Promise<{ attemptI
           <div className="mx-auto max-w-sm space-y-4">
             <div className="text-center">
               <span className="text-5xl font-bold">{scorePct}%</span>
+              {(pointsPerCorrect !== 1 || pointsPerWrong !== 0) && (
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {totalEarned.toFixed(pointsPerWrong % 1 ? 2 : 1)} / {maxPossible.toFixed(1)} points
+                </p>
+              )}
             </div>
             <Progress value={scorePct} className="h-3" />
             <div className="grid grid-cols-2 gap-4 text-center">
@@ -101,10 +115,22 @@ export default function ExamResultsPage({ params }: { params: Promise<{ attemptI
                 <p className="text-sm text-muted-foreground">Correct</p>
               </div>
               <div className="rounded-lg bg-muted p-3">
-                <p className="text-2xl font-bold">{totalQuestions - correctCount}</p>
+                <p className="text-2xl font-bold">{wrongCount}</p>
                 <p className="text-sm text-muted-foreground">Incorrect</p>
               </div>
             </div>
+            {(pointsPerCorrect !== 1 || pointsPerWrong !== 0) && (
+              <div className="grid grid-cols-2 gap-4 text-center">
+                <div className="rounded-lg bg-muted p-3">
+                  <p className="text-2xl font-bold">+{(correctCount * pointsPerCorrect).toFixed(1)}</p>
+                  <p className="text-sm text-muted-foreground">Points earned</p>
+                </div>
+                <div className="rounded-lg bg-muted p-3">
+                  <p className="text-2xl font-bold">{(pointsPerWrong * wrongCount).toFixed(1)}</p>
+                  <p className="text-sm text-muted-foreground">Penalty</p>
+                </div>
+              </div>
+            )}
             <div className="text-center text-sm text-muted-foreground">
               Time: {formatTime(timeTaken)}
             </div>
@@ -143,6 +169,11 @@ export default function ExamResultsPage({ params }: { params: Promise<{ attemptI
                 {card && (
                   <>
                     <p className="mb-2 font-medium">{card.front}</p>
+                    {(pointsPerCorrect !== 1 || pointsPerWrong !== 0) && (
+                      <span className="text-xs text-muted-foreground">
+                        {a.isCorrect ? `+${pointsPerCorrect}` : a.isCorrect === false ? `${pointsPerWrong}` : '—'}
+                      </span>
+                    )}
 
                     {/* Multi-choice options */}
                     {parsedOptions && (

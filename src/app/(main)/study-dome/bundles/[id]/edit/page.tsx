@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
 import { getDb } from "@/db";
 import { getBundleById, updateBundle } from "@/lib/db-queries";
 import { toast } from "sonner";
@@ -18,6 +19,11 @@ export default function EditBundlePage({ params }: { params: Promise<{ id: strin
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [examQuestionCount, setExamQuestionCount] = useState<number>(5);
+  const [examTimeLimitMinutes, setExamTimeLimitMinutes] = useState<number>(0);
+  const [examDifficultyFilter, setExamDifficultyFilter] = useState<number>(0);
+  const [examPointsPerCorrect, setExamPointsPerCorrect] = useState<number>(1);
+  const [examPointsPerWrong, setExamPointsPerWrong] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -28,6 +34,11 @@ export default function EditBundlePage({ params }: { params: Promise<{ id: strin
       if (bundle) {
         setTitle(bundle.title);
         setDescription(bundle.description ?? "");
+        setExamQuestionCount(bundle.examQuestionCount ?? 5);
+        setExamTimeLimitMinutes(bundle.examTimeLimitSeconds ? Math.round(bundle.examTimeLimitSeconds / 60) : 0);
+        setExamDifficultyFilter(Math.round((bundle.examDifficultyFilter ?? 0) * 100));
+        setExamPointsPerCorrect(bundle.examPointsPerCorrect ?? 1);
+        setExamPointsPerWrong(bundle.examPointsPerWrong ?? 0);
       }
     } catch (e) {
       console.error(e);
@@ -46,7 +57,15 @@ export default function EditBundlePage({ params }: { params: Promise<{ id: strin
     setSaving(true);
     try {
       const { db } = await getDb();
-      await updateBundle(db, bundleId, { title: title.trim(), description: description.trim() || null });
+      await updateBundle(db, bundleId, {
+        title: title.trim(),
+        description: description.trim() || null,
+        examQuestionCount: examQuestionCount || null,
+        examTimeLimitSeconds: examTimeLimitMinutes > 0 ? examTimeLimitMinutes * 60 : null,
+        examDifficultyFilter: examDifficultyFilter / 100,
+        examPointsPerCorrect: examPointsPerCorrect,
+        examPointsPerWrong: examPointsPerWrong,
+      });
       toast.success("Bundle updated");
       router.push(`/study-dome/bundles/${bundleId}`);
     } catch {
@@ -80,14 +99,45 @@ export default function EditBundlePage({ params }: { params: Promise<{ id: strin
           <Label htmlFor="desc">Description</Label>
           <Textarea id="desc" value={description} onChange={(e) => setDescription(e.target.value)} />
         </div>
-        <div className="flex gap-2">
-          <Button onClick={handleSubmit} disabled={saving}>
-            {saving ? "Saving..." : "Save"}
-          </Button>
-          <Button variant="outline" onClick={() => router.back()}>
-            Cancel
-          </Button>
+      </div>
+
+      <div className="mt-8 max-w-md space-y-4">
+        <h2 className="text-lg font-semibold">Default Exam Settings</h2>
+        <p className="text-sm text-muted-foreground">These values pre-fill when starting an exam from this bundle.</p>
+
+        <div className="space-y-2">
+          <Label>Default questions</Label>
+          <Input type="number" min={1} value={examQuestionCount} onChange={(e) => setExamQuestionCount(parseInt(e.target.value) || 5)} />
         </div>
+
+        <div className="space-y-2">
+          <Label>Default time limit (minutes, 0 = no limit)</Label>
+          <Input type="number" min={0} value={examTimeLimitMinutes} onChange={(e) => setExamTimeLimitMinutes(parseInt(e.target.value) || 0)} />
+        </div>
+
+        <div className="space-y-2">
+          <Label>Points per correct answer</Label>
+          <Input type="number" min={0} step={0.5} value={examPointsPerCorrect} onChange={(e) => setExamPointsPerCorrect(parseFloat(e.target.value) || 1)} />
+        </div>
+
+        <div className="space-y-2">
+          <Label>Negative points per wrong answer</Label>
+          <Input type="number" max={0} step={0.25} value={examPointsPerWrong} onChange={(e) => setExamPointsPerWrong(parseFloat(e.target.value) || 0)} />
+        </div>
+
+        <div className="space-y-2">
+          <Label>Focus on weak cards: {examDifficultyFilter}%</Label>
+          <Slider value={[examDifficultyFilter]} onValueChange={([v]) => setExamDifficultyFilter(v)} min={0} max={100} step={10} />
+        </div>
+      </div>
+
+      <div className="mt-6 flex gap-2">
+        <Button onClick={handleSubmit} disabled={saving}>
+          {saving ? "Saving..." : "Save"}
+        </Button>
+        <Button variant="outline" onClick={() => router.back()}>
+          Cancel
+        </Button>
       </div>
     </Boxed>
   );
