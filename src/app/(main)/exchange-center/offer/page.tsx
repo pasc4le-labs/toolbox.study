@@ -17,7 +17,7 @@ export default function OfferPage() {
   const [cards, setCards] = useState<PickerItem[]>([]);
   const [bundles, setBundles] = useState<PickerItem[]>([]);
   const [exams, setExams] = useState<PickerItem[]>([]);
-  const [selected, setSelected] = useState<Set<number>>(new Set());
+  const [selected, setSelected] = useState<Set<string>>(new Set());
   const [phase, setPhase] = useState<"select" | "waiting" | "connected" | "transferring" | "done">("select");
   const [transferProgress, setTransferProgress] = useState(0);
   const [totalChunks, setTotalChunks] = useState(0);
@@ -98,7 +98,7 @@ export default function OfferPage() {
   async function handleRequest(request: ExchangeRequest) {
     setPhase("transferring");
     const { db } = await getDb();
-    const payload = await serializeSelectedItems(db, request.ids);
+    const payload = await serializeSelectedItems(db, request.items);
     const json = JSON.stringify(payload);
     const messages = createTransferMessages(json);
 
@@ -134,9 +134,9 @@ export default function OfferPage() {
       async function sendManifest() {
         const { db } = await getDb();
         const manifest = await buildManifest(db, {
-          cards: cards.filter((c) => selected.has(c.id)).map((c) => c.id),
-          bundles: bundles.filter((b) => selected.has(b.id)).map((b) => b.id),
-          exams: exams.filter((e) => selected.has(e.id)).map((e) => e.id),
+          cards: cards.filter((c) => selected.has(`card:${c.id}`)).map((c) => c.id),
+          bundles: bundles.filter((b) => selected.has(`bundle:${b.id}`)).map((b) => b.id),
+          exams: exams.filter((e) => selected.has(`exam:${e.id}`)).map((e) => e.id),
         });
         peerActions.send(JSON.stringify({ type: "manifest", items: manifest }));
       }

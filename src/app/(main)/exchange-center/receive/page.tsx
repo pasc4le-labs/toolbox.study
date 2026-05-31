@@ -16,7 +16,7 @@ export default function ReceivePage() {
   const [roomCode, setRoomCode] = useState("");
   const [phase, setPhase] = useState<"input" | "connecting" | "connected" | "receiving" | "done">("input");
   const [manifest, setManifest] = useState<ExchangeManifest | null>(null);
-  const [selected, setSelected] = useState<Set<number>>(new Set());
+  const [selected, setSelected] = useState<Set<string>>(new Set());
   const [progress, setProgress] = useState(0);
   const [totalChunks, setTotalChunks] = useState(0);
   const [importSummary, setImportSummary] = useState<{ cards: number; bundles: number; exams: number } | null>(null);
@@ -135,8 +135,11 @@ export default function ReceivePage() {
       toast.error("Select at least one item to import");
       return;
     }
-    const ids = Array.from(selected);
-    peerActions.send(JSON.stringify({ type: "request", ids }));
+    const items = Array.from(selected).map((key) => {
+      const [kind, idStr] = key.split(":");
+      return { kind: kind as "card" | "bundle" | "exam", id: parseInt(idStr, 10) };
+    });
+    peerActions.send(JSON.stringify({ type: "request", items }));
   };
 
   if (phase === "input") {

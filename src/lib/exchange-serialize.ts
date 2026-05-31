@@ -80,7 +80,7 @@ export async function buildManifest(
 
 export async function serializeSelectedItems(
   db: Db,
-  ids: number[],
+  items: Array<{ kind: "card" | "bundle" | "exam"; id: number }>,
 ): Promise<{
   cards: Array<{
     id: number;
@@ -148,19 +148,30 @@ export async function serializeSelectedItems(
     }>,
   };
 
-  // Fetch all selected items by kind
-  const allCards = await db
-    .select()
-    .from(schema.cards)
-    .where(inArray(schema.cards.id, ids));
-  const allBundles = await db
-    .select()
-    .from(schema.bundles)
-    .where(inArray(schema.bundles.id, ids));
-  const allExams = await db
-    .select()
-    .from(schema.exams)
-    .where(inArray(schema.exams.id, ids));
+  const cardIds = new Set(items.filter(i => i.kind === "card").map(i => i.id));
+  const bundleIds = new Set(items.filter(i => i.kind === "bundle").map(i => i.id));
+  const examIds = new Set(items.filter(i => i.kind === "exam").map(i => i.id));
+
+  // Auto-include cards from selected bundles so bundles arrive with their cards
+  if (bundleIds.size > 0) {
+    const bundleCardRows = await db
+      .select({ cardId: schema.bundleCards.cardId })
+      .from(schema.bundleCards)
+      .where(inArray(schema.bundleCards.bundleId, Array.from(bundleIds)));
+    for (const row of bundleCardRows) {
+      cardIds.add(row.cardId);
+    }
+  }
+
+  const allCards = cardIds.size > 0
+    ? await db.select().from(schema.cards).where(inArray(schema.cards.id, Array.from(cardIds)))
+    : [];
+  const allBundles = bundleIds.size > 0
+    ? await db.select().from(schema.bundles).where(inArray(schema.bundles.id, Array.from(bundleIds)))
+    : [];
+  const allExams = examIds.size > 0
+    ? await db.select().from(schema.exams).where(inArray(schema.exams.id, Array.from(examIds)))
+    : [];
 
   // Cards
   for (const card of allCards) {

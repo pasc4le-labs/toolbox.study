@@ -10,9 +10,14 @@ export type ExchangeManifest = {
   items: ManifestItem[];
 };
 
+export type TypedId = {
+  kind: "card" | "bundle" | "exam";
+  id: number;
+};
+
 export type ExchangeRequest = {
   type: "request";
-  ids: number[];
+  items: TypedId[];
 };
 
 export type TransferStart = {

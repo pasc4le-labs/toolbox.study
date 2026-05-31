@@ -1,9 +1,12 @@
 "use client";
 
-import { useState } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import type { ManifestItem } from "@/lib/exchange-protocol";
+
+function toKey(item: ManifestItem): string {
+  return `${item.kind}:${item.id}`;
+}
 
 export function ManifestViewer({
   items,
@@ -11,8 +14,8 @@ export function ManifestViewer({
   onChange,
 }: {
   items: ManifestItem[];
-  selected: Set<number>;
-  onChange: (selected: Set<number>) => void;
+  selected: Set<string>;
+  onChange: (selected: Set<string>) => void;
 }) {
   const grouped = {
     card: items.filter((i) => i.kind === "card"),
@@ -20,24 +23,24 @@ export function ManifestViewer({
     exam: items.filter((i) => i.kind === "exam"),
   };
 
-  const toggle = (id: number) => {
+  const toggle = (key: string) => {
     const next = new Set(selected);
-    if (next.has(id)) {
-      next.delete(id);
+    if (next.has(key)) {
+      next.delete(key);
     } else {
-      next.add(id);
+      next.add(key);
     }
     onChange(next);
   };
 
   const toggleGroup = (kind: keyof typeof grouped) => {
-    const ids = grouped[kind].map((i) => i.id);
+    const keys = grouped[kind].map(toKey);
     const next = new Set(selected);
-    const allSelected = ids.every((id) => next.has(id));
+    const allSelected = keys.every((k) => next.has(k));
     if (allSelected) {
-      ids.forEach((id) => next.delete(id));
+      keys.forEach((k) => next.delete(k));
     } else {
-      ids.forEach((id) => next.add(id));
+      keys.forEach((k) => next.add(k));
     }
     onChange(next);
   };
@@ -54,7 +57,7 @@ export function ManifestViewer({
             onClick={() => toggleGroup(kind)}
             className="text-xs text-primary hover:underline"
           >
-            {groupItems.every((i) => selected.has(i.id))
+            {groupItems.every((i) => selected.has(toKey(i)))
               ? "Deselect All"
               : "Select All"}
           </button>
@@ -62,12 +65,12 @@ export function ManifestViewer({
         <div className="space-y-1">
           {groupItems.map((item) => (
             <label
-              key={item.id}
+              key={toKey(item)}
               className="flex cursor-pointer items-center gap-3 rounded-md border px-3 py-2 hover:bg-muted"
             >
               <Checkbox
-                checked={selected.has(item.id)}
-                onCheckedChange={() => toggle(item.id)}
+                checked={selected.has(toKey(item))}
+                onCheckedChange={() => toggle(toKey(item))}
               />
               <div className="flex-1">
                 <p className="text-sm font-medium">{item.displayName}</p>
