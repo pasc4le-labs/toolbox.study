@@ -22,6 +22,23 @@ async function createKnowledgeCard(page: import("@playwright/test").Page) {
   await page.waitForLoadState("networkidle");
 }
 
+async function createKnowledgeCardWithTag(page: import("@playwright/test").Page, tagName: string) {
+  await page.goto("/study-dome/cards/new");
+  await page.waitForLoadState("networkidle");
+
+  await page.click("label[for='type-knowledge']");
+  await page.fill("#front", "Tagged card");
+  await page.fill("#back", "Has a tag");
+
+  // Add a tag
+  await page.fill("input[placeholder='New tag name...']", tagName);
+  await page.click("button:has-text('Add'):not(:has-text('Add Option'))");
+
+  await page.click("button:has-text('Create Card')");
+  await page.waitForURL(/\/study-dome\/cards/);
+  await page.waitForLoadState("networkidle");
+}
+
 async function createOpenCard(page: import("@playwright/test").Page) {
   await page.goto("/study-dome/cards/new");
   await page.waitForLoadState("networkidle");
@@ -352,4 +369,94 @@ test("JSON import with string-encoded options/correctIndices handles legacy expo
   await expect(page.getByText("Correct")).toBeVisible();
 
   await fs.promises.unlink(tmpFile);
+});
+
+test("bundle export and import preserves card tags", async ({ page }) => {
+  // ── 1. Create a tagged card ──
+  await createKnowledgeCardWithTag(page, "geography");
+
+  // ── 2. Create a bundle with the card ──
+  await page.goto("/study-dome/bundles/new");
+  await page.waitForLoadState("networkidle");
+  await page.fill("#title", "My Bundle");
+  await page.fill("#desc", "A test bundle");
+  await page.click("button:has-text('Create Bundle')");
+  await page.waitForURL(/\/study-dome\/bundles/);
+  await page.waitForLoadState("networkidle");
+
+  // Navigate to the bundle and add the card via the "Add Cards" dialog
+  await page.goto("/study-dome/bundles");
+  await page.waitForLoadState("networkidle");
+  await page.click("text=My Bundle");
+  await page.waitForURL(/\/study-dome\/bundles\/\d+/);
+  await page.waitForLoadState("networkidle");
+
+  await page.click("button:has-text('Add Cards')");
+  // Select the tagged card in the dialog
+  await page.click("text=Tagged card");
+  await page.click("button:has-text('Add 1 card')");
+
+  // Wait for debounced IndexedDB persist (300ms + buffer)
+  await page.waitForTimeout(600);
+
+  // Verify the card is in the bundle
+  await expect(page.getByText("Tagged card")).toBeVisible();
+
+  // ── 3. Export the bundle ──
+  await page.goto("/factory/export");
+  await page.waitForLoadState("networkidle");
+
+  // Bundles scope is default; select the bundle
+  await page.click("button:has-text('Select All')");
+
+  const [download] = await Promise.all([
+    page.waitForEvent("download"),
+    page.click('button:has-text("Export")'),
+  ]);
+
+  const tmpDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), "stb-bundle-"));
+  const downloadPath = path.join(tmpDir, "bundle-export.json");
+  await download.saveAs(downloadPath);
+  const exportContent = await fs.promises.readFile(downloadPath, "utf-8");
+  const exportData = JSON.parse(exportContent);
+
+  expect(exportData).toHaveProperty("bundles");
+  expect(exportData.bundles.length).toBe(1);
+  expect(exportData.bundles[0].cards.length).toBe(1);
+  // Verify tagNames is present (this was the bug: tags were not exported)
+  expect(exportData.bundles[0].cards[0].tagNames).toEqual(["geography"]);
+
+  // ── 4. Clear DB and re-import ──
+  await clearIndexedDB(page);
+
+  await page.goto("/factory/import");
+  await page.waitForLoadState("networkidle");
+
+  const fileInput = page.locator('input[type="file"][accept*=".json"]').first();
+  await fileInput.setInputFiles(downloadPath);
+
+  // Wait for preview
+  await expect(page.getByRole("heading", { name: /Bundles \(\d+\)/ })).toBeVisible();
+
+  // Click Import
+  await page.getByRole("button", { name: /Import \d+ Cards/ }).click();
+
+  // Wait for import to finish
+  await expect(page.getByRole("heading", { name: /Bundles \(\d+\)/ })).not.toBeVisible();
+
+  // ── 5. Verify imported card still has the tag ──
+  await page.goto("/study-dome/cards");
+  await page.waitForLoadState("networkidle");
+
+  await expect(page.getByText("Tagged card")).toBeVisible();
+
+  // Click the card and verify tag is shown
+  await page.click("text=Tagged card");
+  await page.waitForURL(/\/study-dome\/cards\/\d+/);
+  await page.waitForLoadState("networkidle");
+  await expect(page.locator('[data-slot="card-title"]', { hasText: "Tags" })).toBeVisible();
+  await expect(page.getByText("geography")).toBeVisible();
+
+  await fs.promises.unlink(downloadPath);
+  await fs.promises.rmdir(tmpDir);
 });

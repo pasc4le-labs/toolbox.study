@@ -49,6 +49,7 @@ interface ParsedJsonCard {
   options?: string[] | string | null;
   correctIndices?: number[] | string | null;
   tags?: string[];
+  tagNames?: string[];
 }
 
 interface ParsedJsonBundle {
@@ -173,7 +174,7 @@ export default function ImportPage() {
       // Import standalone cards
       for (const cardData of jsonCards) {
         const tagIds: number[] = [];
-        for (const tagName of cardData.tags ?? []) {
+        for (const tagName of (cardData.tags ?? cardData.tagNames ?? [])) {
           const tag = await getOrCreateTag(db, tagName);
           tagIds.push(tag.id);
         }
@@ -203,7 +204,7 @@ export default function ImportPage() {
 
         for (const cardData of bundleData.cards) {
           const tagIds: number[] = [];
-          for (const tagName of cardData.tags ?? []) {
+          for (const tagName of (cardData.tags ?? cardData.tagNames ?? [])) {
             const tag = await getOrCreateTag(db, tagName);
             tagIds.push(tag.id);
           }
