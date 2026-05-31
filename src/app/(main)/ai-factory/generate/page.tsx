@@ -109,8 +109,14 @@ function normalizeCardType(type: unknown): CardType {
   return "knowledge";
 }
 
-function parseCardsFromText(text: string): GeneratedCard[] {
+interface ParseResult {
+  cards: GeneratedCard[];
+  diagnostics: string | null;
+}
+
+function parseCardsFromText(text: string): ParseResult {
   const cards: GeneratedCard[] = [];
+  const errors: string[] = [];
 
   // 1. Strip markdown code fences if present
   let cleaned = text.trim();
@@ -119,8 +125,12 @@ function parseCardsFromText(text: string): GeneratedCard[] {
   }
 
   const tryParseArray = (arr: unknown[]) => {
+    const itemErrors: string[] = [];
     for (const item of arr) {
-      if (!item || typeof item !== "object") continue;
+      if (!item || typeof item !== "object") {
+        itemErrors.push("Found non-object item in array");
+        continue;
+      }
       const raw = item as Record<string, unknown>;
       // Normalize type before validation
       const normalizedType = normalizeCardType(raw.type);
@@ -128,7 +138,21 @@ function parseCardsFromText(text: string): GeneratedCard[] {
       const result = cardSchema.validate?.(normalizedItem);
       if (result && "success" in result && result.success) {
         cards.push(result.value as GeneratedCard);
+      } else {
+        const reason = result && "error" in result ? result.error?.message : "unknown validation error";
+        const typeField = JSON.stringify(raw.type);
+        const hasRequired = "front" in raw && "back" in raw;
+        if (!hasRequired) {
+          itemErrors.push(`Card missing required 'front' or 'back' fields (type: ${typeField})`);
+        } else {
+          itemErrors.push(`Card validation failed: ${reason} (type: ${typeField})`);
+        }
       }
+    }
+    if (itemErrors.length > 0 && cards.length === 0) {
+      errors.push(`Parsed ${arr.length} item(s) but none passed validation: ${itemErrors.join("; ")}`);
+    } else if (itemErrors.length > 0) {
+      errors.push(`${itemErrors.length} of ${arr.length} card(s) failed validation: ${itemErrors.join("; ")}`);
     }
   };
 
@@ -139,10 +163,13 @@ function parseCardsFromText(text: string): GeneratedCard[] {
       const parsed = JSON.parse(arrMatch[0]);
       if (Array.isArray(parsed)) {
         tryParseArray(parsed);
-        if (cards.length > 0) return cards;
+        if (cards.length > 0) return { cards, diagnostics: errors.length > 0 ? errors.join("\n") : null };
+      } else {
+        errors.push("Found JSON array in response but it was not an array after parsing");
       }
-    } catch {
-      // ignore parse error, try next approach
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e);
+      errors.push(`JSON parse error in array match: ${msg}`);
     }
   }
 
@@ -153,10 +180,11 @@ function parseCardsFromText(text: string): GeneratedCard[] {
       const parsed = JSON.parse(arrMatch[1]);
       if (Array.isArray(parsed)) {
         tryParseArray(parsed);
-        if (cards.length > 0) return cards;
+        if (cards.length > 0) return { cards, diagnostics: errors.length > 0 ? errors.join("\n") : null };
       }
-    } catch {
-      // ignore
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e);
+      errors.push(`JSON parse error in elements wrapper: ${msg}`);
     }
   }
 
@@ -165,20 +193,22 @@ function parseCardsFromText(text: string): GeneratedCard[] {
     const parsed = JSON.parse(cleaned);
     if (Array.isArray(parsed)) {
       tryParseArray(parsed);
-      if (cards.length > 0) return cards;
-    }
-    if (parsed && typeof parsed === "object" && "elements" in parsed) {
+      if (cards.length > 0) return { cards, diagnostics: errors.length > 0 ? errors.join("\n") : null };
+    } else if (parsed && typeof parsed === "object" && "elements" in parsed) {
       const arr = (parsed as any).elements;
       if (Array.isArray(arr)) {
         tryParseArray(arr);
-        if (cards.length > 0) return cards;
+        if (cards.length > 0) return { cards, diagnostics: errors.length > 0 ? errors.join("\n") : null };
       }
+    } else {
+      errors.push(`AI returned valid JSON but it was not an array (type: ${Array.isArray(parsed) ? "array" : typeof parsed})`);
     }
-  } catch {
-    // ignore
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : String(e);
+    errors.push(`AI response is not valid JSON: ${msg}`);
   }
 
-  return cards;
+  return { cards, diagnostics: errors.length > 0 ? errors.join("\n") : "AI response could not be parsed — no JSON array found" };
 }
 
 export default function GeneratePage() {
@@ -398,14 +428,27 @@ ${attachedFiles.length > 0 ? `${attachedFiles.length} file(s) are attached for y
       });
 
       const text = await result.text;
-      const cards = parseCardsFromText(text);
+      const { cards, diagnostics } = parseCardsFromText(text);
       if (cards.length === 0) {
-        throw new Error("No valid cards found in response");
+        // Auto-show raw output so the user can inspect what came back
+        setShowRaw(true);
+        const diag = diagnostics ?? "No valid cards could be extracted from the AI response.";
+        throw new Error(`No valid flashcards generated.\n\n${diag}`);
       }
       setGeneratedCards(cards);
-      toast.success(`Generated ${cards.length} cards`);
+      if (diagnostics) {
+        toast.warning(`Generated ${cards.length} cards with some issues: ${diagnostics}`);
+      } else {
+        toast.success(`Generated ${cards.length} cards`);
+      }
     } catch (e: unknown) {
-      toast.error(e instanceof Error ? e.message : "Failed to generate cards");
+      const message = e instanceof Error ? e.message : "Failed to generate cards";
+      toast.error(message, {
+        duration: 8000,
+        description: "Check the raw output below for details.",
+      });
+      // Ensure raw output is visible when there's an error
+      setShowRaw(true);
       console.error(e);
     } finally {
       setGenerating(false);
