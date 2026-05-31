@@ -8,6 +8,7 @@ import {
   RiCheckLine,
   RiArrowLeftLine,
   RiArrowRightLine,
+  RiFlagLine,
 } from "@remixicon/react";
 import { Boxed } from "@/components/boxed";
 import { Button } from "@/components/ui/button";
@@ -51,6 +52,7 @@ export default function ExamAttemptPage({ params }: { params: Promise<{ attemptI
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
+  const [flagged, setFlagged] = useState<Set<number>>(new Set());
   const currentOrderRef = useRef(0);
 
   const load = useCallback(async () => {
@@ -203,6 +205,18 @@ export default function ExamAttemptPage({ params }: { params: Promise<{ attemptI
     currentOrderRef.current = current?.order ?? 0;
   };
 
+  const toggleFlag = (cardId: number) => {
+    setFlagged((prev) => {
+      const next = new Set(prev);
+      if (next.has(cardId)) {
+        next.delete(cardId);
+      } else {
+        next.add(cardId);
+      }
+      return next;
+    });
+  };
+
   const handleOpenAnswer = (value: string) => {
     if (!current) return;
     saveAnswer(current.cardId, value || null, null);
@@ -265,65 +279,76 @@ export default function ExamAttemptPage({ params }: { params: Promise<{ attemptI
           </div>
 
           {current && (
-            <Card>
-              <CardContent className="py-8">
-                <div className="mb-4">
-                  <Badge variant="secondary">
-                    {current.type.replace("_", " ")}
-                  </Badge>
-                </div>
-
-                <p className="mb-6 whitespace-pre-wrap text-lg">{current.front}</p>
-
-                {current.type === "multi_radio" && parsedOptions && (
-                  <RadioGroup
-                    value={selectedRadio?.toString() ?? ""}
-                    onValueChange={handleRadioAnswer}
-                  >
-                    {parsedOptions.map((opt, i) => (
-                      <div key={i} className="flex items-center gap-2 rounded-md border p-3">
-                        <RadioGroupItem value={i.toString()} id={`q-opt-${i}`} />
-                        <Label htmlFor={`q-opt-${i}`} className="flex-1 cursor-pointer">
-                          {opt}
-                        </Label>
-                      </div>
-                    ))}
-                  </RadioGroup>
-                )}
-
-                {current.type === "multi_select" && parsedOptions && (
-                  <div className="space-y-3">
-                    {parsedOptions.map((opt, i) => (
-                      <div key={i} className="flex items-center gap-2 rounded-md border p-3">
-                        <Checkbox
-                          id={`q-opt-${i}`}
-                          checked={selectedCheckboxes.includes(i)}
-                          onCheckedChange={() => handleCheckboxAnswer(i)}
-                        />
-                        <Label htmlFor={`q-opt-${i}`} className="flex-1 cursor-pointer">
-                          {opt}
-                        </Label>
-                      </div>
-                    ))}
+            <div className="flex gap-3">
+              <Card className="flex-1">
+                <CardContent className="py-4">
+                  <div className="mb-4">
+                    <Badge variant="secondary">
+                      {current.type.replaceAll("_", " ")}
+                    </Badge>
                   </div>
-                )}
 
-                {current.type === "open" && (
-                  <Textarea
-                    placeholder="Type your answer..."
-                    value={currentAnswer?.answer ?? ""}
-                    onChange={(e) => handleOpenAnswer(e.target.value)}
-                    rows={6}
-                  />
-                )}
+                  <p className="mb-6 whitespace-pre-wrap text-lg">{current.front}</p>
 
-                {current.type === "knowledge" && (
-                  <p className="text-muted-foreground">
-                    Self-review card. Think about your answer, then check.
-                  </p>
-                )}
-              </CardContent>
-            </Card>
+                  {current.type === "multi_radio" && parsedOptions && (
+                    <RadioGroup
+                      value={selectedRadio?.toString() ?? ""}
+                      onValueChange={handleRadioAnswer}
+                    >
+                      {parsedOptions.map((opt, i) => (
+                        <div key={i} className="flex items-center gap-2 rounded-md border p-3">
+                          <RadioGroupItem value={i.toString()} id={`q-opt-${i}`} />
+                          <Label htmlFor={`q-opt-${i}`} className="flex-1 cursor-pointer">
+                            {opt}
+                          </Label>
+                        </div>
+                      ))}
+                    </RadioGroup>
+                  )}
+
+                  {current.type === "multi_select" && parsedOptions && (
+                    <div className="space-y-3">
+                      {parsedOptions.map((opt, i) => (
+                        <div key={i} className="flex items-center gap-2 rounded-md border p-3">
+                          <Checkbox
+                            id={`q-opt-${i}`}
+                            checked={selectedCheckboxes.includes(i)}
+                            onCheckedChange={() => handleCheckboxAnswer(i)}
+                          />
+                          <Label htmlFor={`q-opt-${i}`} className="flex-1 cursor-pointer">
+                            {opt}
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {current.type === "open" && (
+                    <Textarea
+                      placeholder="Type your answer..."
+                      value={currentAnswer?.answer ?? ""}
+                      onChange={(e) => handleOpenAnswer(e.target.value)}
+                      rows={6}
+                    />
+                  )}
+
+                  {current.type === "knowledge" && (
+                    <p className="text-muted-foreground">
+                      Self-review card. Think about your answer, then check.
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+              <Button
+                variant="outline"
+                size="icon"
+                aria-label={flagged.has(current.cardId) ? "Unflag question" : "Flag question"}
+                onClick={() => toggleFlag(current.cardId)}
+                className={`shrink-0 ${flagged.has(current.cardId) ? "border-red-500 bg-red-500 text-white hover:bg-red-600" : ""}`}
+              >
+                <RiFlagLine className="h-4 w-4" />
+              </Button>
+            </div>
           )}
 
           <div className="mt-6 flex justify-between">
@@ -370,7 +395,7 @@ export default function ExamAttemptPage({ params }: { params: Promise<{ attemptI
                     key={q.cardId}
                     variant={isCurrent ? "default" : hasAnswer ? "secondary" : "outline"}
                     size="sm"
-                    className="h-9 w-9"
+                    className={`h-9 w-9 ${flagged.has(q.cardId) ? "bg-red-500 text-white hover:bg-red-600" : ""}`}
                     onClick={() => setCurrentIdx(i)}
                   >
                     {i + 1}
@@ -422,7 +447,7 @@ export default function ExamAttemptPage({ params }: { params: Promise<{ attemptI
                     key={q.cardId}
                     variant={isCurrent ? "default" : hasAnswer ? "secondary" : "outline"}
                     size="sm"
-                    className="h-9 w-9"
+                    className={`h-9 w-9 ${flagged.has(q.cardId) ? "bg-red-500 text-white hover:bg-red-600" : ""}`}
                     onClick={() => setCurrentIdx(i)}
                   >
                     {i + 1}
