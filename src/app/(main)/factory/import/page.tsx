@@ -33,13 +33,21 @@ import { toast } from "sonner";
 
 type ImportMode = "json" | "sqt";
 
+function parseJsonField<T>(val: string | T | null | undefined): T | null {
+  if (val == null) return null;
+  if (typeof val === "string") {
+    try { return JSON.parse(val) as T; } catch { return null; }
+  }
+  return val as T;
+}
+
 interface ParsedJsonCard {
   type: string;
   front: string;
   back: string;
   explanation?: string | null;
-  options?: string[] | null;
-  correctIndices?: number[] | null;
+  options?: string[] | string | null;
+  correctIndices?: number[] | string | null;
   tags?: string[];
 }
 
@@ -177,8 +185,8 @@ export default function ImportPage() {
           front: cardData.front,
           back: cardData.back,
           explanation: cardData.explanation ?? null,
-          options: cardData.options ?? null,
-          correctIndices: cardData.correctIndices ?? null,
+          options: parseJsonField<string[]>(cardData.options),
+          correctIndices: parseJsonField<number[]>(cardData.correctIndices),
           tagIds,
           bundleIds: bundleId ? [bundleId] : [],
         });
@@ -207,8 +215,8 @@ export default function ImportPage() {
             front: cardData.front,
             back: cardData.back,
             explanation: cardData.explanation ?? null,
-            options: cardData.options ?? null,
-            correctIndices: cardData.correctIndices ?? null,
+            options: parseJsonField<string[]>(cardData.options),
+            correctIndices: parseJsonField<number[]>(cardData.correctIndices),
             tagIds,
             bundleIds: [newBundle.id],
           });

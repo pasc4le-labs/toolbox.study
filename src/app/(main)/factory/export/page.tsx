@@ -20,14 +20,19 @@ import { toast } from "sonner";
 import * as schema from "@/db/schema";
 import { eq } from "drizzle-orm";
 
+function parseJson<T>(val: string | null): T | null {
+  if (!val) return null;
+  try { return JSON.parse(val) as T; } catch { return null; }
+}
+
 interface CardWithTags {
   id: number;
   type: string;
   front: string;
   back: string;
   explanation: string | null;
-  options: string | null;
-  correctIndices: string | null;
+  options: string[] | null;
+  correctIndices: number[] | null;
   tagNames: string[];
 }
 
@@ -146,8 +151,8 @@ export default function ExportPage() {
               front: cardData.front,
               back: cardData.back,
               explanation: cardData.explanation,
-              options: cardData.options,
-              correctIndices: cardData.correctIndices,
+              options: parseJson<string[]>(cardData.options),
+              correctIndices: parseJson<number[]>(cardData.correctIndices),
               tagNames: tags.map((t) => t.name),
             });
           }
@@ -188,8 +193,8 @@ export default function ExportPage() {
             front: cardData.front,
             back: cardData.back,
             explanation: cardData.explanation,
-            options: cardData.options,
-            correctIndices: cardData.correctIndices,
+            options: parseJson<string[]>(cardData.options),
+            correctIndices: parseJson<number[]>(cardData.correctIndices),
             tagNames: tags.map((t) => t.name),
           });
         }
