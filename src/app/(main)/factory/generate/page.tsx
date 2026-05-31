@@ -544,7 +544,7 @@ ${attachedFiles.length > 0 ? `${attachedFiles.length} file(s) are attached for y
               No AI providers configured. Add a provider first.
             </p>
             <Button asChild>
-              <Link href="/ai-factory">
+              <Link href="/factory">
                 <RiAddLine className="mr-2 h-4 w-4" />
                 Configure Provider
               </Link>

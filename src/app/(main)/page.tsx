@@ -47,7 +47,7 @@ export default function Home() {
           </div>
         </Link>
 
-        <Link href="/ai-factory" className="group">
+        <Link href="/factory" className="group">
           <div className="relative h-52 overflow-hidden rounded-2xl border-2 border-primary/20 bg-gradient-to-br from-primary/5 via-background to-background transition-all duration-300 hover:border-primary/50 hover:shadow-2xl hover:shadow-primary/20">
             {/* Applet content area */}
             <div className="flex h-full flex-col justify-center px-6 py-2">
@@ -57,10 +57,10 @@ export default function Home() {
                   <RiMagicLine className="h-7 w-7 text-primary" />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-bold text-foreground">AI Factory</h2>
+                  <h2 className="text-2xl font-bold text-foreground">Factory</h2>
                   <p className="mt-1 text-xs text-muted-foreground/80">
-                    Generate flashcards from content using AI. Supports any
-                    OpenAI-compatible provider.
+                    Generate, import and export flashcards. Supports AI generation
+                    and SQT file import.
                   </p>
                 </div>
               </div>

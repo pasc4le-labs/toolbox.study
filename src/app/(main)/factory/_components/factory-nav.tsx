@@ -6,11 +6,13 @@ import { cn } from "@/lib/utils";
 import { Boxed } from "@/components/boxed";
 
 const tabs = [
-  { label: "Overview", href: "/ai-factory" },
-  { label: "Generate", href: "/ai-factory/generate" },
+  { label: "Overview", href: "/factory" },
+  { label: "Generate", href: "/factory/generate" },
+  { label: "Import", href: "/factory/import" },
+  { label: "Export", href: "/factory/export" },
 ];
 
-export function AiFactoryNav() {
+export function FactoryNav() {
   const pathname = usePathname();
 
   return (
@@ -23,7 +25,7 @@ export function AiFactoryNav() {
               href={tab.href}
               className={cn(
                 "inline-flex items-center border-b-2 px-1 py-3 text-sm font-medium transition-colors",
-                pathname === tab.href || (tab.href !== "/ai-factory" && pathname.startsWith(tab.href))
+                pathname === tab.href || (tab.href !== "/factory" && pathname.startsWith(tab.href))
                   ? "border-primary text-foreground"
                   : "border-transparent text-muted-foreground hover:text-foreground",
               )}

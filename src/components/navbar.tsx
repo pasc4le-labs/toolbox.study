@@ -25,10 +25,10 @@ export function Navbar() {
             Study Dome
           </Link>
           <Link
-            href="/ai-factory"
+            href="/factory"
             className="text-muted-foreground transition-colors hover:text-foreground"
           >
-            AI Factory
+            Factory
           </Link>
           <Link
             href="/exchange-center"
