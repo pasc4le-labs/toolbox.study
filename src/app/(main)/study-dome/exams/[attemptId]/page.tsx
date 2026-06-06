@@ -26,6 +26,7 @@ import { getDb } from "@/db";
 import * as schema from "@/db/schema";
 import {
   getExamById,
+  getExamQuestions,
   submitExamAnswer,
   completeExamAttempt,
 } from "@/lib/db-queries";
@@ -81,28 +82,45 @@ export default function ExamAttemptPage({ params }: { params: Promise<{ attemptI
         return;
       }
 
-      // Get bundle cards as questions
-      const bundleCards = await db
-        .select()
-        .from(schema.bundleCards)
-        .innerJoin(schema.cards, eq(schema.bundleCards.cardId, schema.cards.id))
-        .where(eq(schema.bundleCards.bundleId, e.bundleId))
-        .orderBy(schema.bundleCards.order);
+      // Load persisted questions for this attempt
+      const questionRows = await getExamQuestions(db, parseInt(attemptId));
 
-      // Filter out knowledge cards and limit to questionCount
-      const qs: QuestionData[] = bundleCards
-        .filter((r) => r.cards.type !== "knowledge")
-        .slice(0, e.questionCount)
-        .map((r) => ({
-          cardId: r.cards.id,
-          front: r.cards.front,
-          back: r.cards.back,
-          explanation: r.cards.explanation,
-          type: r.cards.type,
-          options: r.cards.options,
-          correctIndices: r.cards.correctIndices,
-          order: r.bundle_cards.order,
+      let qs: QuestionData[];
+
+      if (questionRows.length > 0) {
+        qs = questionRows.map((q) => ({
+          cardId: q.card.id,
+          front: q.card.front,
+          back: q.card.back,
+          explanation: q.card.explanation,
+          type: q.card.type,
+          options: q.card.options,
+          correctIndices: q.card.correctIndices,
+          order: q.order,
         }));
+      } else {
+        // Legacy fallback: derive from bundle order
+        const bundleCards = await db
+          .select()
+          .from(schema.bundleCards)
+          .innerJoin(schema.cards, eq(schema.bundleCards.cardId, schema.cards.id))
+          .where(eq(schema.bundleCards.bundleId, e.bundleId))
+          .orderBy(schema.bundleCards.order);
+
+        qs = bundleCards
+          .filter((r) => r.cards.type !== "knowledge")
+          .slice(0, e.questionCount)
+          .map((r) => ({
+            cardId: r.cards.id,
+            front: r.cards.front,
+            back: r.cards.back,
+            explanation: r.cards.explanation,
+            type: r.cards.type,
+            options: r.cards.options,
+            correctIndices: r.cards.correctIndices,
+            order: r.bundle_cards.order,
+          }));
+      }
 
       setQuestions(qs);
 

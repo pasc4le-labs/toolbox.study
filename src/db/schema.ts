@@ -154,6 +154,17 @@ export const examAnswers = sqliteTable('exam_answers', {
 export type ExamAnswer = typeof examAnswers.$inferSelect;
 export type NewExamAnswer = typeof examAnswers.$inferInsert;
 
+// Exam questions (persists which cards were selected for each attempt)
+export const examQuestions = sqliteTable('exam_questions', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  attemptId: integer('attempt_id').notNull().references(() => examAttempts.id, { onDelete: 'cascade' }),
+  cardId: integer('card_id').notNull().references(() => cards.id, { onDelete: 'cascade' }),
+  order: integer('order').notNull(),
+});
+
+export type ExamQuestion = typeof examQuestions.$inferSelect;
+export type NewExamQuestion = typeof examQuestions.$inferInsert;
+
 // AI Provider configs (stored in client-side DB for BYOK)
 export const aiProviders = sqliteTable('ai_providers', {
   id: integer('id').primaryKey({ autoIncrement: true }),
@@ -243,6 +254,7 @@ export const examAttemptsRelations = relations(examAttempts, ({ one, many }) => 
     references: [exams.id],
   }),
   answers: many(examAnswers),
+  questions: many(examQuestions),
 }));
 
 export const examAnswersRelations = relations(examAnswers, ({ one }) => ({
@@ -252,6 +264,17 @@ export const examAnswersRelations = relations(examAnswers, ({ one }) => ({
   }),
   card: one(cards, {
     fields: [examAnswers.cardId],
+    references: [cards.id],
+  }),
+}));
+
+export const examQuestionsRelations = relations(examQuestions, ({ one }) => ({
+  attempt: one(examAttempts, {
+    fields: [examQuestions.attemptId],
+    references: [examAttempts.id],
+  }),
+  card: one(cards, {
+    fields: [examQuestions.cardId],
     references: [cards.id],
   }),
 }));

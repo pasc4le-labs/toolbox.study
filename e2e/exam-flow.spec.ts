@@ -116,4 +116,19 @@ test("create a bundle, create exam, take it, and see results", async ({ page }) 
   // Verify results page shows
   await expect(page.getByText("Question Breakdown")).toBeVisible();
   await expect(page.getByText("Back to Study Dome").first()).toBeVisible();
+
+  // Verify all 3 questions appear in results (2 answered + 1 unanswered)
+  const questionCards = page.locator("[class*='Question Breakdown']").locator("..").locator("~ div > div");
+  await expect(page.getByText("1.")).toBeVisible();
+  await expect(page.getByText("2.")).toBeVisible();
+  await expect(page.getByText("3.")).toBeVisible();
+
+  // Verify unanswered question badge exists
+  await expect(page.getByText("Unanswered")).toBeVisible();
+
+  // Verify answered questions have Correct or Incorrect badges
+  const correctBadges = page.getByText("Correct", { exact: true });
+  const incorrectBadges = page.getByText("Incorrect", { exact: true });
+  const totalAnsweredBadges = await correctBadges.count() + await incorrectBadges.count();
+  expect(totalAnsweredBadges).toBeGreaterThanOrEqual(1);
 });

@@ -63,7 +63,8 @@ export default function ExamResultsPage({ params }: { params: Promise<{ attemptI
 
   const correctCount = answers.filter((a) => a.isCorrect).length;
   const wrongCount = answers.filter((a) => a.isCorrect === false).length;
-  const ungradedCount = answers.filter((a) => a.isCorrect === null).length;
+  const unansweredCount = answers.filter((a) => a.isCorrect === null && a.answer === null).length;
+  const ungradedCount = answers.filter((a) => a.isCorrect === null && a.answer !== null).length;
 
   const totalEarned = correctCount * pointsPerCorrect + wrongCount * pointsPerWrong;
   const maxPossible = answers.length * pointsPerCorrect;
@@ -120,6 +121,14 @@ export default function ExamResultsPage({ params }: { params: Promise<{ attemptI
                 <p className="text-sm text-muted-foreground">Incorrect</p>
               </div>
             </div>
+            {unansweredCount > 0 && (
+              <div className="grid grid-cols-1 gap-4 text-center">
+                <div className="rounded-lg bg-muted p-3">
+                  <p className="text-2xl font-bold">{unansweredCount}</p>
+                  <p className="text-sm text-muted-foreground">Unanswered</p>
+                </div>
+              </div>
+            )}
             {(pointsPerCorrect !== 1 || pointsPerWrong !== 0) && (
               <div className="grid grid-cols-2 gap-4 text-center">
                 <div className="rounded-lg bg-muted p-3">
@@ -163,6 +172,11 @@ export default function ExamResultsPage({ params }: { params: Promise<{ attemptI
                 {ungradedCount} open answer{ungradedCount !== 1 ? "s" : ""} not auto-graded — FSRS not updated
               </p>
             )}
+            {unansweredCount > 0 && (
+              <p className="mt-1 text-xs text-muted-foreground">
+                {unansweredCount} question{unansweredCount !== 1 ? "s" : ""} unanswered — FSRS not updated
+              </p>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -185,6 +199,8 @@ export default function ExamResultsPage({ params }: { params: Promise<{ attemptI
                     <Badge className="bg-green-600">Correct</Badge>
                   ) : isCorrect === false ? (
                     <Badge variant="destructive">Incorrect</Badge>
+                  ) : a.answer === null ? (
+                    <Badge variant="outline">Unanswered</Badge>
                   ) : (
                     <Badge variant="secondary">Not Auto-graded</Badge>
                   )}
@@ -232,9 +248,15 @@ export default function ExamResultsPage({ params }: { params: Promise<{ attemptI
                     )}
 
                     {/* Open answer */}
-                    {card.type === "open" && (
+                    {card.type === "open" && a.answer !== null && (
                       <div className="space-y-1 text-sm">
                         <p><span className="text-muted-foreground">Your answer:</span> {a.answer || "(blank)"}</p>
+                        <p><span className="text-muted-foreground">Correct answer:</span> {card.back}</p>
+                      </div>
+                    )}
+                    {card.type === "open" && a.answer === null && (
+                      <div className="space-y-1 text-sm">
+                        <p><span className="text-muted-foreground">Your answer:</span> <em className="text-muted-foreground">(not answered)</em></p>
                         <p><span className="text-muted-foreground">Correct answer:</span> {card.back}</p>
                       </div>
                     )}

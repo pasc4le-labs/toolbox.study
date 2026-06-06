@@ -494,16 +494,20 @@ export async function startExamAttempt(
 
     // Take a mix: difficultyFilter% from weakest, rest random
     const weakCount = Math.round((exam.questionCount * exam.difficultyFilter));
-    const weakCards = eligible.slice(0, weakCount);
-    const rest = eligible.slice(weakCount);
 
-    // Shuffle rest
-    for (let i = rest.length - 1; i > 0; i--) {
+    // Shuffle a copy of eligible for the random portion
+    const shuffled = [...eligible];
+    for (let i = shuffled.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
-      [rest[i], rest[j]] = [rest[j], rest[i]];
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
 
-    selected = [...weakCards, ...rest].slice(0, exam.questionCount);
+    const weakCards = eligible.slice(0, weakCount);
+    const weakCardIds = new Set(weakCards.map((r) => r.cards.id));
+    const randomPool = shuffled.filter((r) => !weakCardIds.has(r.cards.id));
+    const randomCards = randomPool.slice(0, exam.questionCount - weakCount);
+
+    selected = [...weakCards, ...randomCards];
   } else {
     // Random selection
     for (let i = eligible.length - 1; i > 0; i--) {
@@ -524,6 +528,15 @@ export async function startExamAttempt(
 
   if (!attempt) throw new Error('Failed to create exam attempt');
 
+  // Persist selected questions
+  await db.insert(schema.examQuestions).values(
+    selected.map((r, i) => ({
+      attemptId: attempt.id,
+      cardId: r.cards.id,
+      order: i,
+    })),
+  );
+
   // Insert answers (empty placeholders for navigation)
   const questions = selected.map((r, i) => ({
     card: r.cards,
@@ -540,29 +553,6 @@ export async function getExamById(db: Db, id: number) {
     .where(eq(schema.exams.id, id))
     .limit(1);
   return exam ?? null;
-}
-
-/**
- * Get the questions for an exam without creating a new attempt.
- */
-export async function getExamQuestions(
-  db: Db,
-  examId: number,
-): Promise<Array<{ card: typeof schema.cards.$inferSelect; order: number }>> {
-  const exam = await getExamById(db, examId);
-  if (!exam || !exam.bundleId) return [];
-
-  const bundleCards = await db
-    .select()
-    .from(schema.bundleCards)
-    .innerJoin(schema.cards, eq(schema.bundleCards.cardId, schema.cards.id))
-    .where(eq(schema.bundleCards.bundleId, exam.bundleId))
-    .orderBy(asc(schema.bundleCards.order));
-
-  return bundleCards
-    .filter((r) => r.cards.type !== 'knowledge')
-    .slice(0, exam.questionCount)
-    .map((r) => ({ card: r.cards, order: r.bundle_cards.order }));
 }
 
 export async function getAllExams(db: Db) {
@@ -610,6 +600,21 @@ export async function getExamAnswers(db: Db, attemptId: number) {
     .orderBy(asc(schema.examAnswers.order));
 }
 
+export async function getExamQuestions(db: Db, attemptId: number) {
+  return db
+    .select({
+      id: schema.examQuestions.id,
+      attemptId: schema.examQuestions.attemptId,
+      cardId: schema.examQuestions.cardId,
+      order: schema.examQuestions.order,
+      card: schema.cards,
+    })
+    .from(schema.examQuestions)
+    .innerJoin(schema.cards, eq(schema.examQuestions.cardId, schema.cards.id))
+    .where(eq(schema.examQuestions.attemptId, attemptId))
+    .orderBy(asc(schema.examQuestions.order));
+}
+
 export async function completeExamAttempt(db: Db, attemptId: number) {
   const [attempt] = await db
     .select()
@@ -622,16 +627,45 @@ export async function completeExamAttempt(db: Db, attemptId: number) {
   const exam = await getExamById(db, attempt.examId);
   if (!exam) throw new Error('Exam not found');
 
-  const answers = await getExamAnswers(db, attemptId);
-  const answered = answers.filter((a) => a.isCorrect !== null);
+  // Insert placeholder answers for unanswered questions
+  const questions = await getExamQuestions(db, attemptId);
+  const existingAnswers = await getExamAnswers(db, attemptId);
+  const answeredCardIds = new Set(existingAnswers.map((a) => a.cardId));
+  const unanswered = questions.filter((q) => !answeredCardIds.has(q.cardId));
+
+  if (unanswered.length > 0) {
+    await db.insert(schema.examAnswers).values(
+      unanswered.map((q) => ({
+        attemptId,
+        cardId: q.cardId,
+        order: q.order,
+        answer: null,
+        isCorrect: null,
+      })),
+    );
+  }
+
+  // Re-fetch all answers after inserting placeholders
+  const allAnswers = await getExamAnswers(db, attemptId);
+
+  // Auto-gradable question types
+  const autoGradableCardIds = new Set(
+    questions.filter((q) => q.card.type === 'multi_radio' || q.card.type === 'multi_select').map((q) => q.cardId),
+  );
 
   const pointsPerCorrect = exam.pointsPerCorrect ?? 1;
   const pointsPerWrong = exam.pointsPerWrong ?? 0;
 
+  const answered = allAnswers.filter((a) => a.isCorrect !== null);
   const correctCount = answered.filter((a) => a.isCorrect).length;
-  const wrongCount = answered.filter((a) => a.isCorrect === false).length;
+  // Wrong = explicitly wrong + unanswered auto-gradable
+  const unansweredAutoGradable = allAnswers.filter(
+    (a) => a.isCorrect === null && a.answer === null && autoGradableCardIds.has(a.cardId),
+  ).length;
+  const wrongCount = answered.filter((a) => a.isCorrect === false).length + unansweredAutoGradable;
+  const totalGraded = correctCount + wrongCount;
   const totalPoints = correctCount * pointsPerCorrect + wrongCount * pointsPerWrong;
-  const maxPoints = answered.length * pointsPerCorrect;
+  const maxPoints = totalGraded * pointsPerCorrect;
 
   // score normalized 0-1 (clamped to 0 if negative scoring)
   const score = maxPoints > 0 ? Math.max(0, totalPoints / maxPoints) : 0;
@@ -641,9 +675,9 @@ export async function completeExamAttempt(db: Db, attemptId: number) {
     .set({ completedAt: Date.now(), score })
     .where(eq(schema.examAttempts.id, attemptId));
 
-  // Update FSRS state for each auto-graded answer.
+  // Update FSRS state for each explicitly answered auto-graded answer.
   // Correct → Rating.Good (reinforce), incorrect → Rating.Again (re-schedule soon).
-  // Open-type answers (isCorrect === null) are skipped — no automatic FSRS update.
+  // Open-type answers (isCorrect === null) and unanswered questions are skipped.
   for (const answer of answered) {
     try {
       const rating = answer.isCorrect ? Rating.Good : Rating.Again;

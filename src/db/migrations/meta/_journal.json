@@ -22,6 +22,13 @@
       "when": 1780245112005,
       "tag": "20260531163152_new_gorgon",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1780781438276,
+      "tag": "20260606213038_blue_the_liberteens",
+      "breakpoints": true
     }
   ]
 }
