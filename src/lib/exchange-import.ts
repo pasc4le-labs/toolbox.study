@@ -1,10 +1,8 @@
-import type { SQLJsDatabase } from "drizzle-orm/sql-js";
 import { eq } from "drizzle-orm";
 import * as schema from "@/db/schema";
-import { createCard, createBundle, getOrCreateTag } from "@/lib/db-queries";
+import { createCard, createBundle, getOrCreateTag } from "@/lib/services";
+import type { Db } from "@/lib/services/types";
 import { persistNow } from "@/db";
-
-type Db = SQLJsDatabase<typeof schema>;
 
 export async function importExchangeData(
   db: Db,
@@ -108,7 +106,7 @@ export async function importExchangeData(
     if (bundleData.examQuestionCount != null || bundleData.examTimeLimitSeconds != null ||
         bundleData.examDifficultyFilter != null || bundleData.examPointsPerCorrect != null ||
         bundleData.examPointsPerWrong != null) {
-      const { updateBundle } = await import("@/lib/db-queries");
+      const { updateBundle } = await import("@/lib/services");
       await updateBundle(db, newBundle.id, {
         examQuestionCount: bundleData.examQuestionCount ?? null,
         examTimeLimitSeconds: bundleData.examTimeLimitSeconds ?? null,

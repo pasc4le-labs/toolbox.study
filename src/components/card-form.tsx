@@ -27,7 +27,7 @@ import {
   getCardTags,
   getCardBundles,
   getCardById,
-} from "@/lib/db-queries";
+} from "@/lib/services";
 import { toast } from "sonner";
 
 type CardType = "multi_radio" | "multi_select" | "open" | "knowledge";

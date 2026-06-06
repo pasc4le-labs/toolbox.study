@@ -37,7 +37,7 @@ import {
   createAiProvider,
   updateAiProvider,
   deleteAiProvider,
-} from "@/lib/db-queries";
+} from "@/lib/services";
 import { toast } from "sonner";
 
 const PROVIDER_TYPES = [

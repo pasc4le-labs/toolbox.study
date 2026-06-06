@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { getDb } from "@/db";
-import { getExamResults } from "@/lib/db-queries";
+import { getExamResults } from "@/lib/services";
 
 export default function ExamResultsPage({ params }: { params: Promise<{ attemptId: string }> }) {
   const { attemptId } = use(params);

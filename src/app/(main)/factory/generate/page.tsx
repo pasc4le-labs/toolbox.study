@@ -34,7 +34,7 @@ import {
   getAllBundles,
   getOrCreateTag,
   addCardsToBundle,
-} from "@/lib/db-queries";
+} from "@/lib/services";
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { createAnthropic } from "@ai-sdk/anthropic";

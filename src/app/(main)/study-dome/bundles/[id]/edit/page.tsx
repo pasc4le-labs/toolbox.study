@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { getDb } from "@/db";
-import { getBundleById, updateBundle } from "@/lib/db-queries";
+import { getBundleById, updateBundle } from "@/lib/services";
 import { toast } from "sonner";
 
 export default function EditBundlePage({ params }: { params: Promise<{ id: string }> }) {

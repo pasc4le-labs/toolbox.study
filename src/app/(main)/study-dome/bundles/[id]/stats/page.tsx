@@ -30,7 +30,7 @@ import {
   getBundleById,
   getBundleExamStats,
   getBundleCardWeakness,
-} from "@/lib/db-queries";
+} from "@/lib/services";
 
 // ── Helpers ──
 

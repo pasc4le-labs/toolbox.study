@@ -15,7 +15,7 @@ import {
   getAllCards,
   getAllBundles,
   getCardsByBundle,
-} from "@/lib/db-queries";
+} from "@/lib/services";
 import { toast } from "sonner";
 import * as schema from "@/db/schema";
 import { eq } from "drizzle-orm";

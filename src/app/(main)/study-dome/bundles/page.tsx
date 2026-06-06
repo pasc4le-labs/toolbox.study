@@ -15,7 +15,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { getDb } from "@/db";
-import { getAllBundles, deleteBundle } from "@/lib/db-queries";
+import { getAllBundles, deleteBundle } from "@/lib/services";
 import { toast } from "sonner";
 
 export default function BundlesPage() {

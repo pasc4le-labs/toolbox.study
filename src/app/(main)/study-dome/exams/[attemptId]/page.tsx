@@ -29,7 +29,7 @@ import {
   getExamQuestions,
   submitExamAnswer,
   completeExamAttempt,
-} from "@/lib/db-queries";
+} from "@/lib/services";
 import { toast } from "sonner";
 
 interface QuestionData {

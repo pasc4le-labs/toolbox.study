@@ -22,7 +22,7 @@ import {
   deleteCard,
   getCardTags,
   getCardBundles,
-} from "@/lib/db-queries";
+} from "@/lib/services";
 import { toast } from "sonner";
 
 export default function CardDetailPage({ params }: { params: Promise<{ id: string }> }) {

@@ -36,7 +36,7 @@ import {
   getUntaggedCardsByBundle,
   getOrCreateTag,
   addTagsToCard,
-} from "@/lib/db-queries";
+} from "@/lib/services";
 import {
   tagCardsWithAI,
   type TaggerResult,

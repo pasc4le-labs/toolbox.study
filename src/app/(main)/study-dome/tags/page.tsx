@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { getDb } from "@/db";
-import { getTagStats } from "@/lib/db-queries";
+import { getTagStats } from "@/lib/services";
 
 export default function TagsPage() {
   const [stats, setStats] = useState<Awaited<ReturnType<typeof getTagStats>>>([]);

@@ -18,7 +18,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { getDb } from "@/db";
-import { getAllCards, searchCards, deleteCard, getCardTags } from "@/lib/db-queries";
+import { getAllCards, searchCards, deleteCard, getCardTags } from "@/lib/services";
 import { toast } from "sonner";
 
 export default function CardsPage() {

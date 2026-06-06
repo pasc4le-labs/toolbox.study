@@ -13,7 +13,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { getDb } from "@/db";
-import { getAllBundles } from "@/lib/db-queries";
+import { getAllBundles } from "@/lib/services";
 
 export default function StudyDomePage() {
   const [bundles, setBundles] = useState<Awaited<ReturnType<typeof getAllBundles>>>([]);

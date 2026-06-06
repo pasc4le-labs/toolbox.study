@@ -28,7 +28,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { getDb } from "@/db";
-import { getBundleById, getBundlePastAttempts } from "@/lib/db-queries";
+import { getBundleById, getBundlePastAttempts } from "@/lib/services";
 
 function scoreColorClass(score: number) {
   if (score >= 0.7) return "text-green-600";

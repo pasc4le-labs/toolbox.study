@@ -19,7 +19,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { getDb } from "@/db";
-import { getDueCards, rateCard } from "@/lib/db-queries";
+import { getDueCards, rateCard } from "@/lib/services";
 import { Rating } from "ts-fsrs";
 import { toast } from "sonner";
 

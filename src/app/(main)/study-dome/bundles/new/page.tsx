@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { getDb } from "@/db";
-import { createBundle } from "@/lib/db-queries";
+import { createBundle } from "@/lib/services";
 import { toast } from "sonner";
 
 export default function NewBundlePage() {

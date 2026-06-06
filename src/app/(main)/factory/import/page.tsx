@@ -28,7 +28,7 @@ import {
   createBundle,
   getOrCreateTag,
   addCardsToBundle,
-} from "@/lib/db-queries";
+} from "@/lib/services";
 import { parseSqt, type SqtCard } from "@/lib/sqt-parser";
 import { toast } from "sonner";
 

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { getDb } from "@/db";
-import { getAllCards, getAllBundles, getAllExams } from "@/lib/db-queries";
+import { getAllCards, getAllBundles, getAllExams } from "@/lib/services";
 import { useSignaling } from "@/hooks/use-signaling";
 import { useWebRTCPeer } from "@/hooks/use-webrtc-peer";
 import { buildManifest, serializeSelectedItems } from "@/lib/exchange-serialize";
