@@ -920,6 +920,29 @@ export async function getBundleExamStats(db: Db, bundleId: number) {
   };
 }
 
+export async function getBundlePastAttempts(db: Db, bundleId: number) {
+  const bundleExams = await db
+    .select({ id: schema.exams.id })
+    .from(schema.exams)
+    .where(eq(schema.exams.bundleId, bundleId));
+
+  if (bundleExams.length === 0) return [];
+
+  const examIds = bundleExams.map((e) => e.id);
+
+  const attempts = await db
+    .select({
+      attempt: schema.examAttempts,
+      exam: schema.exams,
+    })
+    .from(schema.examAttempts)
+    .innerJoin(schema.exams, eq(schema.examAttempts.examId, schema.exams.id))
+    .where(inArray(schema.examAttempts.examId, examIds))
+    .orderBy(sql`${schema.examAttempts.startedAt} DESC`);
+
+  return attempts;
+}
+
 export async function getBundleCardWeakness(db: Db, bundleId: number) {
   const cardsInBundle = await db
     .select()

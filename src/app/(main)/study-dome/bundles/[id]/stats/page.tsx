@@ -24,6 +24,7 @@ import { Boxed } from "@/components/boxed";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { getDb } from "@/db";
 import {
   getBundleById,
@@ -209,21 +210,50 @@ export default function BundleStatsPage({
             </Link>
           </Button>
         </div>
-        <Card className="border-dashed">
-          <CardContent className="py-12 text-center">
-            <RiBarChartLine className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
-            <p className="mb-2 text-lg font-medium">No exam data yet</p>
-            <p className="mb-6 text-sm text-muted-foreground">
-              Take an exam to see statistics.
-            </p>
-            <Button asChild>
-              <Link href={`/study-dome/bundles/${bundleId}`}>
-                <RiPlayLine className="mr-2 h-4 w-4" />
-                Go to Bundle
+
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold tracking-tight">
+            {bundle.title} — Statistics
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {stats?.exams.length ?? 0} exam
+            {(stats?.exams.length ?? 0) !== 1 ? "s" : ""} ·{" "}
+            {stats?.totalAttempts ?? 0} attempt
+            {(stats?.totalAttempts ?? 0) !== 1 ? "s" : ""}
+          </p>
+        </div>
+
+        <Tabs defaultValue="statistics">
+          <TabsList>
+            <TabsTrigger value="statistics">
+              <RiBarChartLine className="mr-1 h-3.5 w-3.5" />
+              Statistics
+            </TabsTrigger>
+            <TabsTrigger value="past-exams" asChild>
+              <Link href={`/study-dome/bundles/${bundleId}/past-exams`}>
+                <RiHistoryLine className="mr-1 h-3.5 w-3.5" />
+                Past Exams
               </Link>
-            </Button>
-          </CardContent>
-        </Card>
+            </TabsTrigger>
+          </TabsList>
+          <TabsContent value="statistics">
+            <Card className="border-dashed">
+              <CardContent className="py-12 text-center">
+                <RiBarChartLine className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
+                <p className="mb-2 text-lg font-medium">No exam data yet</p>
+                <p className="mb-6 text-sm text-muted-foreground">
+                  Take an exam to see statistics.
+                </p>
+                <Button asChild>
+                  <Link href={`/study-dome/bundles/${bundleId}`}>
+                    <RiPlayLine className="mr-2 h-4 w-4" />
+                    Go to Bundle
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </Boxed>
     );
   }
@@ -256,172 +286,188 @@ export default function BundleStatsPage({
         </p>
       </div>
 
-      {/* Summary cards */}
-      <div className="mb-8 grid gap-4 md:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">
-              Total Attempts
-            </CardTitle>
-            <RiHistoryLine className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {stats?.totalAttempts ?? 0}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              {stats?.completedAttempts ?? 0} completed
-            </p>
-          </CardContent>
-        </Card>
+      <Tabs defaultValue="statistics">
+        <TabsList>
+          <TabsTrigger value="statistics">
+            <RiBarChartLine className="mr-1 h-3.5 w-3.5" />
+            Statistics
+          </TabsTrigger>
+          <TabsTrigger value="past-exams" asChild>
+            <Link href={`/study-dome/bundles/${bundleId}/past-exams`}>
+              <RiHistoryLine className="mr-1 h-3.5 w-3.5" />
+              Past Exams
+            </Link>
+          </TabsTrigger>
+        </TabsList>
+        <TabsContent value="statistics">
+          {/* Summary cards */}
+          <div className="mb-8 grid gap-4 md:grid-cols-4">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium">
+                  Total Attempts
+                </CardTitle>
+                <RiHistoryLine className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {stats?.totalAttempts ?? 0}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {stats?.completedAttempts ?? 0} completed
+                </p>
+              </CardContent>
+            </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">
-              Average Score
-            </CardTitle>
-            <RiBarChartLine className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className={`text-2xl font-bold ${scoreColorClass(stats?.avgScore ?? 0)}`}>
-              {avgPct}%
-            </div>
-            <Progress value={avgPct} className="mt-2" />
-          </CardContent>
-        </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium">
+                  Average Score
+                </CardTitle>
+                <RiBarChartLine className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className={`text-2xl font-bold ${scoreColorClass(stats?.avgScore ?? 0)}`}>
+                  {avgPct}%
+                </div>
+                <Progress value={avgPct} className="mt-2" />
+              </CardContent>
+            </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Best Score</CardTitle>
-            <RiTrophyLine className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className={`text-2xl font-bold ${scoreColorClass(stats?.bestScore ?? 0)}`}>
-              {bestPct}%
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Worst: {worstPct}%
-            </p>
-          </CardContent>
-        </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium">Best Score</CardTitle>
+                <RiTrophyLine className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className={`text-2xl font-bold ${scoreColorClass(stats?.bestScore ?? 0)}`}>
+                  {bestPct}%
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Worst: {worstPct}%
+                </p>
+              </CardContent>
+            </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Total Time</CardTitle>
-            <RiTimeLine className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {formatDuration(stats?.totalTimeSeconds ?? 0)}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Across all completed attempts
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium">Total Time</CardTitle>
+                <RiTimeLine className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {formatDuration(stats?.totalTimeSeconds ?? 0)}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Across all completed attempts
+                </p>
+              </CardContent>
+            </Card>
+          </div>
 
-      {/* Charts grid */}
-      <div className="mb-8 grid gap-6 lg:grid-cols-2">
-        {/* Score Trend Chart */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <RiHistoryLine className="h-5 w-5" />
-              Score Trend
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {attemptPoints.length <= 1 ? (
-              <p className="py-8 text-center text-muted-foreground">
-                Take more exams to see a trend.
-              </p>
-            ) : (
-              <VisXYContainer
-                data={attemptPoints}
-                height={300}
-                yDomain={[0, 100]}
-              >
-                <VisLine<AttemptPoint>
-                  x={lineXAccessor}
-                  y={lineYAccessor}
-                  lineWidth={2}
-                  curveType={CurveType.Basis}
-                />
-                <VisAxis
-                  type="x"
-                  label="Attempt"
-                  tickValues={attemptPoints.map((d) => d.index)}
-                />
-                <VisAxis type="y" label="Score %" />
-              </VisXYContainer>
+          {/* Charts grid */}
+          <div className="mb-8 grid gap-6 lg:grid-cols-2">
+            {/* Score Trend Chart */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <RiHistoryLine className="h-5 w-5" />
+                  Score Trend
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {attemptPoints.length <= 1 ? (
+                  <p className="py-8 text-center text-muted-foreground">
+                    Take more exams to see a trend.
+                  </p>
+                ) : (
+                  <VisXYContainer
+                    data={attemptPoints}
+                    height={300}
+                    yDomain={[0, 100]}
+                  >
+                    <VisLine<AttemptPoint>
+                      x={lineXAccessor}
+                      y={lineYAccessor}
+                      lineWidth={2}
+                      curveType={CurveType.Basis}
+                    />
+                    <VisAxis
+                      type="x"
+                      label="Attempt"
+                      tickValues={attemptPoints.map((d) => d.index)}
+                    />
+                    <VisAxis type="y" label="Score %" />
+                  </VisXYContainer>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Overall Correctness Donut */}
+            {donutData.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <RiBarChartLine className="h-5 w-5" />
+                    Overall Correctness
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <VisSingleContainer data={donutData} height={250}>
+                    <VisDonut<DonutDatum>
+                      value={donutValueAccessor}
+                      centralLabel={`${totalCorrect + totalIncorrect} Answers`}
+                      color={["#22c55e", "#ef4444"]}
+                    />
+                  </VisSingleContainer>
+                  <div className="mt-2 flex justify-center gap-6 text-sm">
+                    <span className="flex items-center gap-1">
+                      <span className="inline-block h-3 w-3 rounded-full bg-green-500" />
+                      Correct: {totalCorrect}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <span className="inline-block h-3 w-3 rounded-full bg-red-500" />
+                      Incorrect: {totalIncorrect}
+                    </span>
+                  </div>
+                </CardContent>
+              </Card>
             )}
-          </CardContent>
-        </Card>
+          </div>
 
-        {/* Overall Correctness Donut */}
-        {donutData.length > 0 && (
-          <Card>
+          {/* Weak Cards Chart */}
+          <Card className="mb-8">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <RiBarChartLine className="h-5 w-5" />
-                Overall Correctness
+                <RiErrorWarningLine className="h-5 w-5" />
+                Weak Cards
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <VisSingleContainer data={donutData} height={250}>
-                <VisDonut<DonutDatum>
-                  value={donutValueAccessor}
-                  centralLabel={`${totalCorrect + totalIncorrect} Answers`}
-                  color={["#22c55e", "#ef4444"]}
-                />
-              </VisSingleContainer>
-              <div className="mt-2 flex justify-center gap-6 text-sm">
-                <span className="flex items-center gap-1">
-                  <span className="inline-block h-3 w-3 rounded-full bg-green-500" />
-                  Correct: {totalCorrect}
-                </span>
-                <span className="flex items-center gap-1">
-                  <span className="inline-block h-3 w-3 rounded-full bg-red-500" />
-                  Incorrect: {totalIncorrect}
-                </span>
-              </div>
+              {weaknessData.length === 0 ? (
+                <p className="py-8 text-center text-muted-foreground">
+                  All cards are performing well — no weak spots detected.
+                </p>
+              ) : (
+                <VisXYContainer data={weaknessData} height={300}>
+                  <VisStackedBar<WeaknessPoint>
+                    x={barXAccessor}
+                    y={[barYCorrect, barYIncorrect]}
+                    color={["#22c55e", "#ef4444"]}
+                    roundedCorners={4}
+                  />
+                  <VisAxis
+                    type="x"
+                    label="Card"
+                    tickFormat={xTickFormat}
+                  />
+                  <VisAxis type="y" label="Answers" />
+                </VisXYContainer>
+              )}
             </CardContent>
           </Card>
-        )}
-      </div>
-
-      {/* Weak Cards Chart */}
-      <Card className="mb-8">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <RiErrorWarningLine className="h-5 w-5" />
-            Weak Cards
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {weaknessData.length === 0 ? (
-            <p className="py-8 text-center text-muted-foreground">
-              All cards are performing well — no weak spots detected.
-            </p>
-          ) : (
-            <VisXYContainer data={weaknessData} height={300}>
-              <VisStackedBar<WeaknessPoint>
-                x={barXAccessor}
-                y={[barYCorrect, barYIncorrect]}
-                color={["#22c55e", "#ef4444"]}
-                roundedCorners={4}
-              />
-              <VisAxis
-                type="x"
-                label="Card"
-                tickFormat={xTickFormat}
-              />
-              <VisAxis type="y" label="Answers" />
-            </VisXYContainer>
-          )}
-        </CardContent>
-      </Card>
+        </TabsContent>
+      </Tabs>
     </Boxed>
   );
 }

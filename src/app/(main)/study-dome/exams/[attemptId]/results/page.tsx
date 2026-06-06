@@ -255,6 +255,14 @@ export default function ExamResultsPage({ params }: { params: Promise<{ attemptI
           <Link href="/study-dome">Back to Study Dome</Link>
         </Button>
         {results.exam?.bundleId && (
+          <Button asChild variant="outline">
+            <Link href={`/study-dome/bundles/${results.exam.bundleId}/past-exams`}>
+              <RiArrowLeftLine className="mr-1 h-4 w-4" />
+              Past Exams
+            </Link>
+          </Button>
+        )}
+        {results.exam?.bundleId && (
           <Button asChild>
             <Link href={`/study-dome/bundles/${results.exam.bundleId}`}>Back to Bundle</Link>
           </Button>
