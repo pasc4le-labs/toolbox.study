@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { RiAddLine, RiMagicLine, RiDeleteBinLine, RiEditLine } from "@remixicon/react";
 import { Boxed } from "@/components/boxed";
@@ -75,19 +75,23 @@ export default function FactoryPage() {
   const [fetchedModels, setFetchedModels] = useState<string[]>([]);
   const [fetchingModels, setFetchingModels] = useState(false);
 
-  const load = useCallback(async () => {
-    try {
-      const { db } = await getDb();
-      const p = await getAllAiProviders(db);
-      setProviders(p);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const loadRef = useRef<() => Promise<void>>(undefined);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    async function load() {
+      try {
+        const { db } = await getDb();
+        const p = await getAllAiProviders(db);
+        setProviders(p);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadRef.current = load;
+    load();
+  }, []);
 
   const resetForm = () => {
     setForm({
@@ -134,7 +138,7 @@ export default function FactoryPage() {
       }
       setDialogOpen(false);
       resetForm();
-      await load();
+      await loadRef.current?.();
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : "Failed to save provider");
     } finally {
@@ -148,7 +152,7 @@ export default function FactoryPage() {
       const { db } = await getDb();
       await deleteAiProvider(db, id);
       toast.success("Provider deleted");
-      await load();
+      await loadRef.current?.();
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : "Failed to delete");
     }
@@ -157,7 +161,7 @@ export default function FactoryPage() {
   const handleEdit = (p: (typeof providers)[number]) => {
     setForm({
       name: p.name,
-      providerType: (p.providerType as any) || "openai-compatible",
+      providerType: ((p.providerType as string | null | undefined) || "openai-compatible") as "openai-compatible" | "google" | "anthropic",
       baseUrl: p.baseUrl,
       apiKey: p.apiKey ?? "",
       modelId: p.modelId,
@@ -187,8 +191,8 @@ export default function FactoryPage() {
         if (!res.ok) throw new Error(`Google API error: ${res.status}`);
         const data = await res.json();
         models = (data.models ?? [])
-          .map((m: any) => m.name?.replace(/^models\//, ""))
-          .filter((id: string) => id && id.startsWith("gemini"));
+          .map((m: unknown) => ((m as Record<string, unknown>).name as string)?.replace(/^models\//, ""))
+          .filter((id: unknown) => typeof id === "string" && (id as string).startsWith("gemini"));
       } else if (form.providerType === "anthropic") {
         const url = "https://api.anthropic.com/v1/models";
         const res = await fetch(url, {
@@ -199,7 +203,7 @@ export default function FactoryPage() {
         });
         if (!res.ok) throw new Error(`Anthropic API error: ${res.status}`);
         const data = await res.json();
-        models = (data.data ?? []).map((m: any) => m.id);
+        models = (data.data ?? []).map((m: unknown) => (m as Record<string, unknown>).id as string);
       } else {
         const url = `${form.baseUrl.replace(/\/$/, "")}/models`;
         const res = await fetch(url, {
@@ -209,7 +213,7 @@ export default function FactoryPage() {
         });
         if (!res.ok) throw new Error(`API error: ${res.status}`);
         const data = await res.json();
-        models = (data.data ?? []).map((m: any) => m.id);
+        models = (data.data ?? []).map((m: unknown) => (m as Record<string, unknown>).id as string);
       }
       setFetchedModels(models);
       if (models.length === 0) {
@@ -217,8 +221,8 @@ export default function FactoryPage() {
       } else {
         toast.success(`Loaded ${models.length} models`);
       }
-    } catch (e: any) {
-      toast.error(e.message || "Failed to fetch models");
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : "Failed to fetch models");
     } finally {
       setFetchingModels(false);
     }

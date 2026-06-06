@@ -74,31 +74,33 @@ export default function TaggerPage() {
   // ── View mode ──
   const [viewMode, setViewMode] = useState<"card" | "tag">("card");
 
-  const load = useCallback(async () => {
-    try {
-      const { db } = await getDb();
-      const [p, b, t] = await Promise.all([
-        getAllAiProviders(db),
-        getAllBundles(db),
-        getAllTags(db),
-      ]);
-      setProviders(p);
-      setBundles(b);
-      setAllTags(t);
-
-      const defaultP = p.find((pr) => pr.isDefault);
-      if (defaultP) setProviderId(defaultP.id.toString());
-      else if (p.length > 0) setProviderId(p[0].id.toString());
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const loadRef = useRef<() => Promise<void>>(undefined);
 
   useEffect(() => {
+    async function load() {
+      try {
+        const { db } = await getDb();
+        const [p, b, t] = await Promise.all([
+          getAllAiProviders(db),
+          getAllBundles(db),
+          getAllTags(db),
+        ]);
+        setProviders(p);
+        setBundles(b);
+        setAllTags(t);
+
+        const defaultP = p.find((pr) => pr.isDefault);
+        if (defaultP) setProviderId(defaultP.id.toString());
+        else if (p.length > 0) setProviderId(p[0].id.toString());
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadRef.current = load;
     load();
-  }, [load]);
+  }, []);
 
   // ── Scan for untagged cards ──
   const handleScan = useCallback(async () => {
@@ -218,13 +220,13 @@ export default function TaggerPage() {
       );
       setResults([]);
       setUntaggedCards([]);
-      await load(); // refresh data
+      await loadRef.current?.(); // refresh data
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed to apply tags");
     } finally {
       setApplying(false);
     }
-  }, [results, selectedCardIds, allTags, load]);
+  }, [results, selectedCardIds, allTags]);
 
   // ── Discard results ──
   const handleDiscard = useCallback(() => {

@@ -186,10 +186,10 @@ test("round-trip export and import preserves all card types", async ({ page }) =
   expect(exportData.cards.length).toBe(4);
 
   // Verify export structure for each type
-  const knowledge = exportData.cards.find((c: any) => c.type === "knowledge");
-  const open = exportData.cards.find((c: any) => c.type === "open");
-  const multiRadio = exportData.cards.find((c: any) => c.type === "multi_radio");
-  const multiSelect = exportData.cards.find((c: any) => c.type === "multi_select");
+  const knowledge = exportData.cards.find((c: unknown) => (c as Record<string, unknown>).type === "knowledge");
+  const open = exportData.cards.find((c: unknown) => (c as Record<string, unknown>).type === "open");
+  const multiRadio = exportData.cards.find((c: unknown) => (c as Record<string, unknown>).type === "multi_radio");
+  const multiSelect = exportData.cards.find((c: unknown) => (c as Record<string, unknown>).type === "multi_select");
 
   expect(knowledge).toBeDefined();
   expect(open).toBeDefined();

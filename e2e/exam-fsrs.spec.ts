@@ -77,7 +77,9 @@ test("exam answers update FSRS state correctly", async ({ page }) => {
 
   await page.waitForURL(/\/study-dome\/exams\/\d+/);
   await page.waitForLoadState("networkidle");
-  await page.waitForTimeout(500);
+
+  // Wait for radio buttons to render
+  await page.waitForSelector("[role='radio']", { timeout: 5000 });
 
   // Extract attemptId from URL
   const examUrl = page.url();
@@ -86,29 +88,23 @@ test("exam answers update FSRS state correctly", async ({ page }) => {
 
   // ── Answer questions: first correctly, second WRONGLY, third correctly ──
   // Card 1: answer correctly (select first option)
-  const label1 = page.locator("label[id^='q-opt-']").first();
-  if (await label1.isVisible().catch(() => false)) {
-    await label1.click();
-    await page.waitForTimeout(200);
-  }
+  await page.locator("[role='radio']").first().click();
+  await page.waitForTimeout(200);
   await page.locator("button:has-text('Next')").click();
   await page.waitForTimeout(300);
 
   // Card 2: answer incorrectly (select second option → wrong)
-  const labels = page.locator("label[id^='q-opt-']");
-  if ((await labels.count()) >= 2) {
-    await labels.nth(1).click();
+  const radios = page.locator("[role='radio']");
+  if ((await radios.count()) >= 2) {
+    await radios.nth(1).click();
     await page.waitForTimeout(200);
   }
   await page.locator("button:has-text('Next')").click();
   await page.waitForTimeout(300);
 
   // Card 3: answer correctly (select first option)
-  const label3 = page.locator("label[id^='q-opt-']").first();
-  if (await label3.isVisible().catch(() => false)) {
-    await label3.click();
-    await page.waitForTimeout(200);
-  }
+  await page.locator("[role='radio']").first().click();
+  await page.waitForTimeout(200);
 
   // ── Submit exam ──
   await page.click("button:has-text('Submit Exam')");
@@ -129,7 +125,7 @@ test("exam answers update FSRS state correctly", async ({ page }) => {
         }>;
       }>;
     }).__getAttemptResults;
-    return getter(parseInt(aid));
+    return getter(parseInt(aid ?? "0"));
   }, attemptId);
 
   // All 3 cards should have FSRS state (reps === 1 means rateCard was called)
@@ -242,7 +238,9 @@ test("all correct answers complete successfully", async ({ page }) => {
 
   await page.waitForURL(/\/study-dome\/exams\/\d+/);
   await page.waitForLoadState("networkidle");
-  await page.waitForTimeout(500);
+
+  // Wait for radio buttons to render
+  await page.waitForSelector("[role='radio']", { timeout: 5000 });
 
   const examUrl2 = page.url();
   const attemptId = examUrl2.match(/\/exams\/(\d+)/)?.[1];
@@ -250,11 +248,8 @@ test("all correct answers complete successfully", async ({ page }) => {
 
   // Answer both correctly
   for (let i = 0; i < 2; i++) {
-    const label = page.locator("label[id^='q-opt-']").first();
-    if (await label.isVisible().catch(() => false)) {
-      await label.click();
-      await page.waitForTimeout(200);
-    }
+    await page.locator("[role='radio']").first().click();
+    await page.waitForTimeout(200);
     if (i === 0) {
       await page.locator("button:has-text('Next')").click();
       await page.waitForTimeout(300);
@@ -267,7 +262,7 @@ test("all correct answers complete successfully", async ({ page }) => {
 
   // Verify all correct on results page
   await expect(page.getByText("Question Breakdown")).toBeVisible();
-  const correctLabels = await page.locator("text=Correct").count();
+  const correctLabels = await page.locator("[data-slot='badge']").filter({ hasText: /^Correct$/ }).count();
   expect(correctLabels).toBeGreaterThanOrEqual(2);
 
   // Verify FSRS: all cards have reps === 1 and stability > 0
@@ -280,7 +275,7 @@ test("all correct answers complete successfully", async ({ page }) => {
         }>;
       }>;
     }).__getAttemptResults;
-    return getter(parseInt(aid));
+    return getter(parseInt(aid ?? "0"));
   }, attemptId);
 
   expect(data.fsrsStates.length).toBeGreaterThanOrEqual(2);

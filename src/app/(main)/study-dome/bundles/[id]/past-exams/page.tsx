@@ -58,23 +58,24 @@ export default function PastExamsPage({ params }: { params: Promise<{ id: string
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
-  const load = useCallback(async () => {
-    try {
-      const { db } = await getDb();
-      const [b, a] = await Promise.all([
-        getBundleById(db, bundleId),
-        getBundlePastAttempts(db, bundleId),
-      ]);
-      setBundle(b);
-      setAttempts(a);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    async function load() {
+      try {
+        const { db } = await getDb();
+        const [b, a] = await Promise.all([
+          getBundleById(db, bundleId),
+          getBundlePastAttempts(db, bundleId),
+        ]);
+        setBundle(b);
+        setAttempts(a);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
     }
+    load();
   }, [bundleId]);
-
-  useEffect(() => { load(); }, [load]);
 
   const completedCount = useMemo(
     () => attempts.filter((a) => a.attempt.completedAt != null).length,

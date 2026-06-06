@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   RiUploadLine,
   RiFileLine,
@@ -83,21 +83,23 @@ export default function ImportPage() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const load = useCallback(async () => {
-    try {
-      const { db } = await getDb();
-      const b = await getAllBundles(db);
-      setBundles(b);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const loadRef = useRef<() => Promise<void>>(undefined);
 
   useEffect(() => {
+    async function load() {
+      try {
+        const { db } = await getDb();
+        const b = await getAllBundles(db);
+        setBundles(b);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadRef.current = load;
     load();
-  }, [load]);
+  }, []);
 
   const resetJsonState = () => {
     setJsonCards([]);
@@ -228,7 +230,7 @@ export default function ImportPage() {
 
       toast.success(`Imported ${count} cards`);
       resetJsonState();
-      await load();
+      await loadRef.current?.();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Import failed");
     } finally {
@@ -290,7 +292,7 @@ export default function ImportPage() {
 
       toast.success(`Imported ${count} cards`);
       resetSqtState();
-      await load();
+      await loadRef.current?.();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Import failed");
     } finally {

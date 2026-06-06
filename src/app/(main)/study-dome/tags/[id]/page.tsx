@@ -18,26 +18,27 @@ export default function TagDetailPage({ params }: { params: Promise<{ id: string
   const [tagName, setTagName] = useState("");
   const [loading, setLoading] = useState(true);
 
-  const load = useCallback(async () => {
-    try {
-      const { db } = await getDb();
-      const [c] = await Promise.all([
-        getCardsByTag(db, tagId),
-      ]);
-      setCards(c);
-      if (c.length > 0) {
-        const tags = await getCardTags(db, c[0].cards.id);
-        const tag = tags.find((t) => t.id === tagId);
-        if (tag) setTagName(tag.name);
+  useEffect(() => {
+    async function load() {
+      try {
+        const { db } = await getDb();
+        const [c] = await Promise.all([
+          getCardsByTag(db, tagId),
+        ]);
+        setCards(c);
+        if (c.length > 0) {
+          const tags = await getCardTags(db, c[0].cards.id);
+          const tag = tags.find((t) => t.id === tagId);
+          if (tag) setTagName(tag.name);
+        }
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
       }
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
     }
+    load();
   }, [tagId]);
-
-  useEffect(() => { load(); }, [load]);
 
   return (
     <Boxed className="py-8">

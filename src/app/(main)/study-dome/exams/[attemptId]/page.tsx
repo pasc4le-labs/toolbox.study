@@ -57,100 +57,116 @@ export default function ExamAttemptPage({ params }: { params: Promise<{ attemptI
   const [flagged, setFlagged] = useState<Set<number>>(new Set());
   const currentOrderRef = useRef(0);
 
-  const load = useCallback(async () => {
-    try {
-      const { db } = await getDb();
+  useEffect(() => {
+    async function load() {
+      try {
+        const { db } = await getDb();
 
-      // Get attempt
-      const [attemptRow] = await db
-        .select()
-        .from(schema.examAttempts)
-        .where(eq(schema.examAttempts.id, parseInt(attemptId)))
-        .limit(1);
-
-      if (!attemptRow || attemptRow.completedAt) {
-        toast.error("Exam not found or already completed");
-        router.push("/study-dome");
-        return;
-      }
-
-      const e = await getExamById(db, attemptRow.examId);
-      setExam(e);
-
-      if (!e || !e.bundleId) {
-        toast.error("Exam has no bundle");
-        return;
-      }
-
-      // Load persisted questions for this attempt
-      const questionRows = await getExamQuestions(db, parseInt(attemptId));
-
-      let qs: QuestionData[];
-
-      if (questionRows.length > 0) {
-        qs = questionRows.map((q) => ({
-          cardId: q.card.id,
-          front: q.card.front,
-          back: q.card.back,
-          explanation: q.card.explanation,
-          type: q.card.type,
-          options: q.card.options,
-          correctIndices: q.card.correctIndices,
-          order: q.order,
-        }));
-      } else {
-        // Legacy fallback: derive from bundle order
-        const bundleCards = await db
+        // Get attempt
+        const [attemptRow] = await db
           .select()
-          .from(schema.bundleCards)
-          .innerJoin(schema.cards, eq(schema.bundleCards.cardId, schema.cards.id))
-          .where(eq(schema.bundleCards.bundleId, e.bundleId))
-          .orderBy(schema.bundleCards.order);
+          .from(schema.examAttempts)
+          .where(eq(schema.examAttempts.id, parseInt(attemptId)))
+          .limit(1);
 
-        qs = bundleCards
-          .filter((r) => r.cards.type !== "knowledge")
-          .slice(0, e.questionCount)
-          .map((r) => ({
-            cardId: r.cards.id,
-            front: r.cards.front,
-            back: r.cards.back,
-            explanation: r.cards.explanation,
-            type: r.cards.type,
-            options: r.cards.options,
-            correctIndices: r.cards.correctIndices,
-            order: r.bundle_cards.order,
+        if (!attemptRow || attemptRow.completedAt) {
+          toast.error("Exam not found or already completed");
+          router.push("/study-dome");
+          return;
+        }
+
+        const e = await getExamById(db, attemptRow.examId);
+        setExam(e);
+
+        if (!e || !e.bundleId) {
+          toast.error("Exam has no bundle");
+          return;
+        }
+
+        // Load persisted questions for this attempt
+        const questionRows = await getExamQuestions(db, parseInt(attemptId));
+
+        let qs: QuestionData[];
+
+        if (questionRows.length > 0) {
+          qs = questionRows.map((q) => ({
+            cardId: q.card.id,
+            front: q.card.front,
+            back: q.card.back,
+            explanation: q.card.explanation,
+            type: q.card.type,
+            options: q.card.options,
+            correctIndices: q.card.correctIndices,
+            order: q.order,
           }));
+        } else {
+          // Legacy fallback: derive from bundle order
+          const bundleCards = await db
+            .select()
+            .from(schema.bundleCards)
+            .innerJoin(schema.cards, eq(schema.bundleCards.cardId, schema.cards.id))
+            .where(eq(schema.bundleCards.bundleId, e.bundleId))
+            .orderBy(schema.bundleCards.order);
+
+          qs = bundleCards
+            .filter((r) => r.cards.type !== "knowledge")
+            .slice(0, e.questionCount)
+            .map((r) => ({
+              cardId: r.cards.id,
+              front: r.cards.front,
+              back: r.cards.back,
+              explanation: r.cards.explanation,
+              type: r.cards.type,
+              options: r.cards.options,
+              correctIndices: r.cards.correctIndices,
+              order: r.bundle_cards.order,
+            }));
+        }
+
+        setQuestions(qs);
+
+        // Load existing answers for this attempt
+        const existingAnswers = await db
+          .select()
+          .from(schema.examAnswers)
+          .where(eq(schema.examAnswers.attemptId, parseInt(attemptId)));
+
+        const ansMap: Record<number, { answer: string | null; isCorrect: boolean | null }> = {};
+        for (const a of existingAnswers) {
+          ansMap[a.cardId] = { answer: a.answer, isCorrect: a.isCorrect };
+        }
+        setAnswers(ansMap);
+
+        // Set timer
+        if (e.timeLimitSeconds) {
+          const elapsed = Date.now() - attemptRow.startedAt;
+          const remaining = Math.max(0, e.timeLimitSeconds * 1000 - elapsed);
+          setTimeLeft(Math.ceil(remaining / 1000));
+        }
+      } catch (err) {
+        console.error(err);
+        toast.error("Failed to load exam");
+      } finally {
+        setLoading(false);
       }
-
-      setQuestions(qs);
-
-      // Load existing answers for this attempt
-      const existingAnswers = await db
-        .select()
-        .from(schema.examAnswers)
-        .where(eq(schema.examAnswers.attemptId, parseInt(attemptId)));
-
-      const ansMap: Record<number, { answer: string | null; isCorrect: boolean | null }> = {};
-      for (const a of existingAnswers) {
-        ansMap[a.cardId] = { answer: a.answer, isCorrect: a.isCorrect };
-      }
-      setAnswers(ansMap);
-
-      // Set timer
-      if (e.timeLimitSeconds) {
-        const elapsed = Date.now() - attemptRow.startedAt;
-        const remaining = Math.max(0, e.timeLimitSeconds * 1000 - elapsed);
-        setTimeLeft(Math.ceil(remaining / 1000));
-      }
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to load exam");
-    } finally {
-      setLoading(false);
     }
+    load();
   }, [attemptId, router]);
 
-  useEffect(() => { load(); }, [load]);
+  const handleSubmit = useCallback(async (isAutoSubmit = false) => {
+    if (submitting) return;
+    setSubmitting(true);
+    try {
+      const { db } = await getDb();
+      await completeExamAttempt(db, parseInt(attemptId));
+      toast.success(isAutoSubmit ? "Time's up! Exam auto-submitted." : "Exam submitted!");
+      router.push(`/study-dome/exams/${attemptId}/results`);
+    } catch {
+      toast.error("Failed to submit exam");
+    } finally {
+      setSubmitting(false);
+    }
+  }, [submitting, attemptId, router]);
 
   // Timer countdown
   useEffect(() => {
@@ -166,10 +182,12 @@ export default function ExamAttemptPage({ params }: { params: Promise<{ attemptI
       });
     }, 1000);
     return () => clearInterval(interval);
-  }, [timeLeft]);
+  }, [timeLeft, handleSubmit]);
 
   const current = questions[currentIdx];
-  currentOrderRef.current = current?.order ?? 0;
+  useEffect(() => {
+    currentOrderRef.current = current?.order ?? 0;
+  }, [current?.order]);
   const isMulti = current?.type === "multi_radio" || current?.type === "multi_select";
   const isOpen = current?.type === "open";
   const parsedOptions = current?.options ? (JSON.parse(current.options) as string[]) : null;
@@ -285,21 +303,6 @@ export default function ExamAttemptPage({ params }: { params: Promise<{ attemptI
   const handleOpenAnswer = (value: string) => {
     if (!current) return;
     saveAnswer(current.cardId, value || null, null);
-  };
-
-  const handleSubmit = async (isAutoSubmit = false) => {
-    if (submitting) return;
-    setSubmitting(true);
-    try {
-      const { db } = await getDb();
-      const score = await completeExamAttempt(db, parseInt(attemptId));
-      toast.success(isAutoSubmit ? "Time's up! Exam auto-submitted." : "Exam submitted!");
-      router.push(`/study-dome/exams/${attemptId}/results`);
-    } catch {
-      toast.error("Failed to submit exam");
-    } finally {
-      setSubmitting(false);
-    }
   };
 
   if (loading) {

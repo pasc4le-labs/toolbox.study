@@ -48,7 +48,7 @@ export async function startExamAttempt(
     .orderBy(asc(schema.bundleCards.order));
 
   // Filter out 'knowledge' type cards (not suitable for exams)
-  let eligible = bundleCards.filter((r) => r.cards.type !== 'knowledge');
+  const eligible = bundleCards.filter((r) => r.cards.type !== 'knowledge');
   let selected = eligible.slice(0, exam.questionCount);
 
   // If difficultyFilter is set, prioritize low-stability cards

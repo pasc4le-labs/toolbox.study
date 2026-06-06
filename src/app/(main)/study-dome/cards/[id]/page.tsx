@@ -36,25 +36,26 @@ export default function CardDetailPage({ params }: { params: Promise<{ id: strin
   const [loading, setLoading] = useState(true);
   const [deleteOpen, setDeleteOpen] = useState(false);
 
-  const load = useCallback(async () => {
-    try {
-      const { db } = await getDb();
-      const [c, t, b] = await Promise.all([
-        getCardById(db, cardId),
-        getCardTags(db, cardId),
-        getCardBundles(db, cardId),
-      ]);
-      setCard(c);
-      setTags(t);
-      setBundles(b);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    async function load() {
+      try {
+        const { db } = await getDb();
+        const [c, t, b] = await Promise.all([
+          getCardById(db, cardId),
+          getCardTags(db, cardId),
+          getCardBundles(db, cardId),
+        ]);
+        setCard(c);
+        setTags(t);
+        setBundles(b);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
     }
+    load();
   }, [cardId]);
-
-  useEffect(() => { load(); }, [load]);
 
   const handleDelete = async () => {
     try {

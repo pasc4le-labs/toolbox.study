@@ -2,7 +2,7 @@ export type ManifestItem = {
   kind: "card" | "bundle" | "exam";
   id: number;
   displayName: string;
-  meta: Record<string, any>;
+  meta: Record<string, unknown>;
 };
 
 export type ExchangeManifest = {

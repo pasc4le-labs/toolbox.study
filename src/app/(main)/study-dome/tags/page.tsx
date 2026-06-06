@@ -15,19 +15,20 @@ export default function TagsPage() {
   const [stats, setStats] = useState<Awaited<ReturnType<typeof getTagStats>>>([]);
   const [loading, setLoading] = useState(true);
 
-  const load = useCallback(async () => {
-    try {
-      const { db } = await getDb();
-      const s = await getTagStats(db);
-      setStats(s);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    async function load() {
+      try {
+        const { db } = await getDb();
+        const s = await getTagStats(db);
+        setStats(s);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
     }
+    load();
   }, []);
-
-  useEffect(() => { load(); }, [load]);
 
   return (
     <Boxed className="py-8">

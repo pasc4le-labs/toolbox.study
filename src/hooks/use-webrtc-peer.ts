@@ -11,12 +11,12 @@ export type PeerState = {
 export type PeerActions = {
   send: (data: string | Uint8Array) => void;
   destroy: () => void;
-  signalRemote: (data: any) => void;
+  signalRemote: (data: unknown) => void;
 };
 
 export function useWebRTCPeer(opts: {
   initiator: boolean;
-  onSignal: (data: any) => void;
+  onSignal: (data: unknown) => void;
   ready?: boolean; // only create Peer when ready (default: true)
 }): [PeerState, PeerActions] {
   const [state, setState] = useState<PeerState>({
@@ -26,14 +26,16 @@ export function useWebRTCPeer(opts: {
 
   const peerRef = useRef<SimplePeerInstance | null>(null);
   const onSignalRef = useRef(opts.onSignal);
-  onSignalRef.current = opts.onSignal;
+  useEffect(() => {
+    onSignalRef.current = opts.onSignal;
+  }, [opts.onSignal]);
 
   useEffect(() => {
     if (opts.ready === false) {
       peerRef.current?.destroy();
       peerRef.current = null;
-      setState({ connected: false, error: null });
-      return;
+      const raf = requestAnimationFrame(() => setState({ connected: false, error: null }));
+      return () => cancelAnimationFrame(raf);
     }
 
     const peer = new Peer({
@@ -91,7 +93,7 @@ export function useWebRTCPeer(opts: {
     setState({ connected: false, error: null });
   }, []);
 
-  const signalRemote = useCallback((data: any) => {
+  const signalRemote = useCallback((data: unknown) => {
     const peer = peerRef.current;
     if (!peer || peer.destroyed) {
       return;

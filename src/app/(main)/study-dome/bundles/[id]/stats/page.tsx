@@ -77,27 +77,26 @@ export default function BundleStatsPage({
   > | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const load = useCallback(async () => {
-    try {
-      const { db } = await getDb();
-      const [b, s, w] = await Promise.all([
-        getBundleById(db, bundleId),
-        getBundleExamStats(db, bundleId),
-        getBundleCardWeakness(db, bundleId),
-      ]);
-      setBundle(b);
-      setStats(s);
-      setWeakness(w);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
-  }, [bundleId]);
-
   useEffect(() => {
+    async function load() {
+      try {
+        const { db } = await getDb();
+        const [b, s, w] = await Promise.all([
+          getBundleById(db, bundleId),
+          getBundleExamStats(db, bundleId),
+          getBundleCardWeakness(db, bundleId),
+        ]);
+        setBundle(b);
+        setStats(s);
+        setWeakness(w);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    }
     load();
-  }, [load]);
+  }, [bundleId]);
 
   // ── Memoized chart data ──
 

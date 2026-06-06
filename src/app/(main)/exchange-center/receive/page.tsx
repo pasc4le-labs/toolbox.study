@@ -28,7 +28,7 @@ export default function ReceivePage() {
     initiator: false,
     ready: signalingState.status === "paired",
     onSignal: useCallback(
-      (data: any) => {
+      (data: unknown) => {
         signalingActions.sendSignal(data);
       },
       [signalingActions],
@@ -41,6 +41,42 @@ export default function ReceivePage() {
       peerActions.signalRemote(signalingState.remoteSignal);
     }
   }, [signalingState.remoteSignal, peerActions]);
+
+  const handleTransferComplete = useCallback(async () => {
+    try {
+      const payload = chunksRef.current.join("");
+      console.log("[exchange/rx] Reassembled payload length:", payload.length);
+      const data = JSON.parse(payload);
+      console.log("[exchange/rx] Parsed payload:", {
+        cards: data.cards?.length ?? 0,
+        bundles: data.bundles?.length ?? 0,
+        exams: data.exams?.length ?? 0,
+        cardIds: data.cards?.map((c: unknown) => (c as Record<string, unknown>).id),
+        bundleDetails: data.bundles?.map((b: unknown) => ({ id: (b as Record<string, unknown>).id, title: (b as Record<string, unknown>).title, cardIds: (b as Record<string, unknown>).cardIds })),
+        firstCard: data.cards?.[0],
+        firstBundle: data.bundles?.[0],
+      });
+      const { db } = await getDb();
+      console.log("[exchange/rx] Calling importExchangeData...");
+      const result = await importExchangeData(db, data);
+      console.log("[exchange/rx] importExchangeData result:", result);
+      setImportSummary(result);
+      setPhase("done");
+      peerActions.send(
+        JSON.stringify({
+          type: "import_complete",
+          imported: result,
+        }),
+      );
+      toast.success(
+        `Imported ${result.cards} cards, ${result.bundles} bundles, ${result.exams} exams`,
+      );
+    } catch (err) {
+      console.error("[exchange/rx] Import failed:", err);
+      toast.error("Failed to import items: " + (err as Error).message);
+      setPhase("connected");
+    }
+  }, [peerActions]);
 
   // Handle data channel messages from sender
   useEffect(() => {
@@ -78,43 +114,7 @@ export default function ReceivePage() {
     }
     window.addEventListener("peer-data", onData);
     return () => window.removeEventListener("peer-data", onData);
-  }, []);
-
-  async function handleTransferComplete() {
-    try {
-      const payload = chunksRef.current.join("");
-      console.log("[exchange/rx] Reassembled payload length:", payload.length);
-      const data = JSON.parse(payload);
-      console.log("[exchange/rx] Parsed payload:", {
-        cards: data.cards?.length ?? 0,
-        bundles: data.bundles?.length ?? 0,
-        exams: data.exams?.length ?? 0,
-        cardIds: data.cards?.map((c: any) => c.id),
-        bundleDetails: data.bundles?.map((b: any) => ({ id: b.id, title: b.title, cardIds: b.cardIds })),
-        firstCard: data.cards?.[0],
-        firstBundle: data.bundles?.[0],
-      });
-      const { db } = await getDb();
-      console.log("[exchange/rx] Calling importExchangeData...");
-      const result = await importExchangeData(db, data);
-      console.log("[exchange/rx] importExchangeData result:", result);
-      setImportSummary(result);
-      setPhase("done");
-      peerActions.send(
-        JSON.stringify({
-          type: "import_complete",
-          imported: result,
-        }),
-      );
-      toast.success(
-        `Imported ${result.cards} cards, ${result.bundles} bundles, ${result.exams} exams`,
-      );
-    } catch (err) {
-      console.error("[exchange/rx] Import failed:", err);
-      toast.error("Failed to import items: " + (err as Error).message);
-      setPhase("connected");
-    }
-  }
+  }, [handleTransferComplete]);
 
   const onConnect = () => {
     if (!roomCode.trim()) {
@@ -128,23 +128,30 @@ export default function ReceivePage() {
   // When WebRTC connects
   useEffect(() => {
     if (peerState.connected && phase === "connecting") {
-      setPhase("connected");
+      const raf = requestAnimationFrame(() => setPhase("connected"));
+      return () => cancelAnimationFrame(raf);
     }
   }, [peerState.connected, phase]);
 
   // React to signaling errors — never stuck on "connecting"
   useEffect(() => {
     if (signalingState.status === "error" && phase === "connecting") {
-      setPhase("input");
-      toast.error(signalingState.error ?? "Connection failed");
+      const raf = requestAnimationFrame(() => {
+        setPhase("input");
+        toast.error(signalingState.error ?? "Connection failed");
+      });
+      return () => cancelAnimationFrame(raf);
     }
   }, [signalingState.status, signalingState.error, phase]);
 
   // React to WebRTC errors during connecting
   useEffect(() => {
     if (peerState.error && phase === "connecting") {
-      setPhase("input");
-      toast.error("WebRTC error: " + peerState.error.message);
+      const raf = requestAnimationFrame(() => {
+        setPhase("input");
+        toast.error("WebRTC error: " + peerState.error?.message);
+      });
+      return () => cancelAnimationFrame(raf);
     }
   }, [peerState.error, phase]);
 

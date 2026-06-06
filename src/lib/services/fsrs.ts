@@ -100,7 +100,7 @@ export async function getDueCards(
   const now = Date.now();
 
   // Base query: cards with FSRS due <= now
-  let query = db
+  const query = db
     .select()
     .from(schema.cards)
     .innerJoin(schema.cardFsrs, eq(schema.cards.id, schema.cardFsrs.cardId))

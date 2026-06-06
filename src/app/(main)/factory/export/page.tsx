@@ -57,25 +57,24 @@ export default function ExportPage() {
   // Selected cards (for card export)
   const [selectedCards, setSelectedCards] = useState<Set<number>>(new Set());
 
-  const load = useCallback(async () => {
-    try {
-      const { db } = await getDb();
-      const [c, b] = await Promise.all([
-        getAllCards(db),
-        getAllBundles(db),
-      ]);
-      setAllCards(c);
-      setAllBundles(b);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
   useEffect(() => {
+    async function load() {
+      try {
+        const { db } = await getDb();
+        const [c, b] = await Promise.all([
+          getAllCards(db),
+          getAllBundles(db),
+        ]);
+        setAllCards(c);
+        setAllBundles(b);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    }
     load();
-  }, [load]);
+  }, []);
 
   const toggleBundle = (id: number) => {
     setSelectedBundles((prev) => {
@@ -166,7 +165,7 @@ export default function ExportPage() {
         }
 
         const json = JSON.stringify(exportData, null, 2);
-        downloadJson(json, `studytoolbox-bundles-${Date.now()}.json`);
+        downloadJson(json, "studytoolbox-bundles");
         toast.success(`Exported ${exportData.bundles.length} bundle(s)`);
       } else {
         // Card export
@@ -201,7 +200,7 @@ export default function ExportPage() {
 
         const exportData = { cards };
         const json = JSON.stringify(exportData, null, 2);
-        downloadJson(json, `studytoolbox-cards-${Date.now()}.json`);
+        downloadJson(json, "studytoolbox-cards");
         toast.success(`Exported ${cards.length} card(s)`);
       }
     } catch (err) {
@@ -211,7 +210,8 @@ export default function ExportPage() {
     }
   };
 
-  const downloadJson = (content: string, filename: string) => {
+  const downloadJson = (content: string, baseName: string) => {
+    const filename = `${baseName}-${Date.now()}.json`;
     const blob = new Blob([content], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");

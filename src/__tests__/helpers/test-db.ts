@@ -26,7 +26,8 @@ export async function createTestDb(): Promise<TestDbHandle> {
   sqlDb.run("PRAGMA foreign_keys = ON");
   const db = drizzle(sqlDb, { schema });
 
-  (db as any).dialect.migrate(migrations, (db as any).session, {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (db as unknown as { dialect: { migrate: (...args: unknown[]) => void }; session: unknown }).dialect.migrate(migrations, (db as unknown as { session: unknown }).session, {
     migrationsTable: "__drizzle_migrations",
   });
 

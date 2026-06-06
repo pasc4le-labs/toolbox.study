@@ -5,10 +5,10 @@ declare module "simple-peer-light" {
     connected: boolean;
     destroyed: boolean;
     send(data: string | Uint8Array | ArrayBuffer): void;
-    signal(data: any): void;
+    signal(data: unknown): void;
     destroy(): void;
 
-    on(event: "signal", listener: (data: any) => void): this;
+    on(event: "signal", listener: (data: unknown) => void): this;
     on(event: "connect", listener: () => void): this;
     on(event: "data", listener: (data: Uint8Array | string) => void): this;
     on(event: "error", listener: (err: Error) => void): this;

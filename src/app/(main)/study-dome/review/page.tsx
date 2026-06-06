@@ -46,27 +46,28 @@ function ReviewContent() {
   const [selectedCheckboxes, setSelectedCheckboxes] = useState<number[]>([]);
   const [openAnswer, setOpenAnswer] = useState("");
 
-  const loadCards = useCallback(async () => {
-    try {
-      const { db } = await getDb();
-      const due = await getDueCards(db, {
-        tagId: tagId ? parseInt(tagId) : undefined,
-        bundleId: bundleId ? parseInt(bundleId) : undefined,
-      });
-      setCards(
-        due.map((d) => ({
-          card: d.cards,
-          fsrs: d.card_fsrs,
-        })),
-      );
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    async function loadCards() {
+      try {
+        const { db } = await getDb();
+        const due = await getDueCards(db, {
+          tagId: tagId ? parseInt(tagId) : undefined,
+          bundleId: bundleId ? parseInt(bundleId) : undefined,
+        });
+        setCards(
+          due.map((d) => ({
+            card: d.cards,
+            fsrs: d.card_fsrs,
+          })),
+        );
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
     }
+    loadCards();
   }, [tagId, bundleId]);
-
-  useEffect(() => { loadCards(); }, [loadCards]);
 
   const current = cards[currentIdx];
   const isMulti = current?.card.type === "multi_radio" || current?.card.type === "multi_select";

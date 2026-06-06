@@ -19,19 +19,20 @@ export default function StudyDomePage() {
   const [bundles, setBundles] = useState<Awaited<ReturnType<typeof getAllBundles>>>([]);
   const [loading, setLoading] = useState(true);
 
-  const load = useCallback(async () => {
-    try {
-      const { db } = await getDb();
-      const b = await getAllBundles(db);
-      setBundles(b);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    async function load() {
+      try {
+        const { db } = await getDb();
+        const b = await getAllBundles(db);
+        setBundles(b);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
     }
+    load();
   }, []);
-
-  useEffect(() => { load(); }, [load]);
 
   return (
     <Boxed className="py-8">

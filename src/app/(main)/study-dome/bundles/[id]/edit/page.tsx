@@ -27,27 +27,28 @@ export default function EditBundlePage({ params }: { params: Promise<{ id: strin
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  const load = useCallback(async () => {
-    try {
-      const { db } = await getDb();
-      const bundle = await getBundleById(db, bundleId);
-      if (bundle) {
-        setTitle(bundle.title);
-        setDescription(bundle.description ?? "");
-        setExamQuestionCount(bundle.examQuestionCount ?? 5);
-        setExamTimeLimitMinutes(bundle.examTimeLimitSeconds ? Math.round(bundle.examTimeLimitSeconds / 60) : 0);
-        setExamDifficultyFilter(Math.round((bundle.examDifficultyFilter ?? 0) * 100));
-        setExamPointsPerCorrect(bundle.examPointsPerCorrect ?? 1);
-        setExamPointsPerWrong(bundle.examPointsPerWrong ?? 0);
+  useEffect(() => {
+    async function load() {
+      try {
+        const { db } = await getDb();
+        const bundle = await getBundleById(db, bundleId);
+        if (bundle) {
+          setTitle(bundle.title);
+          setDescription(bundle.description ?? "");
+          setExamQuestionCount(bundle.examQuestionCount ?? 5);
+          setExamTimeLimitMinutes(bundle.examTimeLimitSeconds ? Math.round(bundle.examTimeLimitSeconds / 60) : 0);
+          setExamDifficultyFilter(Math.round((bundle.examDifficultyFilter ?? 0) * 100));
+          setExamPointsPerCorrect(bundle.examPointsPerCorrect ?? 1);
+          setExamPointsPerWrong(bundle.examPointsPerWrong ?? 0);
+        }
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
       }
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
     }
+    load();
   }, [bundleId]);
-
-  useEffect(() => { load(); }, [load]);
 
   const handleSubmit = async () => {
     if (!title.trim()) {

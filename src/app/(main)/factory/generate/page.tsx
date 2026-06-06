@@ -195,7 +195,7 @@ function parseCardsFromText(text: string): ParseResult {
       tryParseArray(parsed);
       if (cards.length > 0) return { cards, diagnostics: errors.length > 0 ? errors.join("\n") : null };
     } else if (parsed && typeof parsed === "object" && "elements" in parsed) {
-      const arr = (parsed as any).elements;
+      const arr = (parsed as Record<string, unknown>).elements;
       if (Array.isArray(arr)) {
         tryParseArray(arr);
         if (cards.length > 0) return { cards, diagnostics: errors.length > 0 ? errors.join("\n") : null };
@@ -238,32 +238,31 @@ export default function GeneratePage() {
   const [streamingRaw, setStreamingRaw] = useState("");
   const rawTextRef = useRef("");
 
-  const load = useCallback(async () => {
-    try {
-      const { db } = await getDb();
-      const [p, t, b] = await Promise.all([
-        getAllAiProviders(db),
-        getAllTags(db),
-        getAllBundles(db),
-      ]);
-      setProviders(p);
-      setTags(t);
-      setBundles(b);
-
-      // Auto-select default provider
-      const defaultP = p.find((pr) => pr.isDefault);
-      if (defaultP) setProviderId(defaultP.id.toString());
-      else if (p.length > 0) setProviderId(p[0].id.toString());
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
   useEffect(() => {
+    async function load() {
+      try {
+        const { db } = await getDb();
+        const [p, t, b] = await Promise.all([
+          getAllAiProviders(db),
+          getAllTags(db),
+          getAllBundles(db),
+        ]);
+        setProviders(p);
+        setTags(t);
+        setBundles(b);
+
+        // Auto-select default provider
+        const defaultP = p.find((pr) => pr.isDefault);
+        if (defaultP) setProviderId(defaultP.id.toString());
+        else if (p.length > 0) setProviderId(p[0].id.toString());
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    }
     load();
-  }, [load]);
+  }, []);
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -319,6 +318,7 @@ export default function GeneratePage() {
       // Normalize model ID (strip Google models/ prefix if present)
       const modelId = provider.modelId.replace(/^models\//, "");
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let model: any;
       switch (providerType) {
         case "google": {

@@ -24,13 +24,15 @@ export default function OfferPage() {
 
   const [signalingState, signalingActions] = useSignaling();
   const remoteSignalRef = useRef(signalingState.remoteSignal);
-  remoteSignalRef.current = signalingState.remoteSignal;
+  useEffect(() => {
+    remoteSignalRef.current = signalingState.remoteSignal;
+  }, [signalingState.remoteSignal]);
 
   const [peerState, peerActions] = useWebRTCPeer({
     initiator: true,
     ready: signalingState.status === "paired",
     onSignal: useCallback(
-      (data: any) => {
+      (data: unknown) => {
         signalingActions.sendSignal(data);
       },
       [signalingActions],
@@ -75,35 +77,7 @@ export default function OfferPage() {
     }
   }, [signalingState.remoteSignal, peerActions]);
 
-  // Handle data channel messages from receiver
-  useEffect(() => {
-    function onData(event: Event) {
-      const data = (event as CustomEvent).detail;
-      const text = typeof data === "string" ? data : new TextDecoder().decode(data);
-      console.log("[exchange/offer] Received peer-data message, length:", text.length, "preview:", text.slice(0, 200));
-      try {
-        const msg = JSON.parse(text);
-        console.log("[exchange/offer] Parsed message type:", msg.type, msg.type === "request" ? { items: msg.items } : "");
-        if (msg.type === "request") {
-          handleRequest(msg as ExchangeRequest);
-        }
-        if (msg.type === "import_complete") {
-          const ic = msg as ImportComplete;
-          console.log("[exchange/offer] Import complete from peer:", ic.imported);
-          toast.success(
-            `Exchange complete! Peer imported ${ic.imported.cards} cards, ${ic.imported.bundles} bundles, ${ic.imported.exams} exams.`,
-          );
-          setPhase("done");
-        }
-      } catch (e) {
-        console.warn("[exchange/offer] Failed to parse peer-data:", e);
-      }
-    }
-    window.addEventListener("peer-data", onData);
-    return () => window.removeEventListener("peer-data", onData);
-  }, [selected]);
-
-  async function handleRequest(request: ExchangeRequest) {
+  const handleRequest = useCallback(async (request: ExchangeRequest) => {
     console.log("[exchange/offer] handleRequest called with items:", request.items);
     setPhase("transferring");
     const { db } = await getDb();
@@ -134,7 +108,35 @@ export default function OfferPage() {
       }
     }
     console.log("[exchange/offer] Transfer complete, all messages sent");
-  }
+  }, [peerActions]);
+
+  // Handle data channel messages from receiver
+  useEffect(() => {
+    function onData(event: Event) {
+      const data = (event as CustomEvent).detail;
+      const text = typeof data === "string" ? data : new TextDecoder().decode(data);
+      console.log("[exchange/offer] Received peer-data message, length:", text.length, "preview:", text.slice(0, 200));
+      try {
+        const msg = JSON.parse(text);
+        console.log("[exchange/offer] Parsed message type:", msg.type, msg.type === "request" ? { items: msg.items } : "");
+        if (msg.type === "request") {
+          handleRequest(msg as ExchangeRequest);
+        }
+        if (msg.type === "import_complete") {
+          const ic = msg as ImportComplete;
+          console.log("[exchange/offer] Import complete from peer:", ic.imported);
+          toast.success(
+            `Exchange complete! Peer imported ${ic.imported.cards} cards, ${ic.imported.bundles} bundles, ${ic.imported.exams} exams.`,
+          );
+          setPhase("done");
+        }
+      } catch (e) {
+        console.warn("[exchange/offer] Failed to parse peer-data:", e);
+      }
+    }
+    window.addEventListener("peer-data", onData);
+    return () => window.removeEventListener("peer-data", onData);
+  }, [handleRequest]);
 
   const onCreateRoom = async () => {
     if (selected.size === 0) {
@@ -148,7 +150,7 @@ export default function OfferPage() {
   // When peer connects via WebRTC
   useEffect(() => {
     if (peerState.connected && phase === "waiting") {
-      setPhase("connected");
+      const raf = requestAnimationFrame(() => setPhase("connected"));
       // Send manifest
       async function sendManifest() {
         const { db } = await getDb();
@@ -170,6 +172,7 @@ export default function OfferPage() {
         peerActions.send(JSON.stringify({ type: "manifest", items: manifest }));
       }
       sendManifest();
+      return () => cancelAnimationFrame(raf);
     }
   }, [peerState.connected, phase, cards, bundles, exams, selected, peerActions]);
 

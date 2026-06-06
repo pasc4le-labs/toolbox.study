@@ -17,19 +17,20 @@ export default function ExamResultsPage({ params }: { params: Promise<{ attemptI
   const [results, setResults] = useState<Awaited<ReturnType<typeof getExamResults>> | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const load = useCallback(async () => {
-    try {
-      const { db } = await getDb();
-      const r = await getExamResults(db, parseInt(attemptId));
-      setResults(r);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    async function load() {
+      try {
+        const { db } = await getDb();
+        const r = await getExamResults(db, parseInt(attemptId));
+        setResults(r);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
     }
+    load();
   }, [attemptId]);
-
-  useEffect(() => { load(); }, [load]);
 
   if (loading) {
     return (

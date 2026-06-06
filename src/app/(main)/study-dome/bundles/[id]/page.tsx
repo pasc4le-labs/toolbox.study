@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, use } from "react";
+import { useState, useEffect, useRef, use } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -71,30 +71,34 @@ export default function BundleDetailPage({ params }: { params: Promise<{ id: str
   const [pointsPerWrong, setPointsPerWrong] = useState(0);
   const [creatingExam, setCreatingExam] = useState(false);
 
-  const load = useCallback(async () => {
-    try {
-      const { db } = await getDb();
-      const [b, c] = await Promise.all([
-        getBundleById(db, bundleId),
-        getCardsByBundle(db, bundleId),
-      ]);
-      setBundle(b);
-      setCards(c);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
-  }, [bundleId]);
+  const loadRef = useRef<() => Promise<void>>(undefined);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    async function load() {
+      try {
+        const { db } = await getDb();
+        const [b, c] = await Promise.all([
+          getBundleById(db, bundleId),
+          getCardsByBundle(db, bundleId),
+        ]);
+        setBundle(b);
+        setCards(c);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadRef.current = load;
+    load();
+  }, [bundleId]);
 
   const handleRemoveCard = async (cardId: number) => {
     try {
       const { db } = await getDb();
       await removeCardFromBundle(db, bundleId, cardId);
       toast.success("Card removed");
-      await load();
+      await loadRef.current?.();
     } catch {
       toast.error("Failed to remove card");
     }
@@ -110,7 +114,7 @@ export default function BundleDetailPage({ params }: { params: Promise<{ id: str
       const { db } = await getDb();
       await reorderBundleCard(db, bundleId, cardId, newIdx);
       await reorderBundleCard(db, bundleId, cards[newIdx].bundle_cards.cardId, idx);
-      await load();
+      await loadRef.current?.();
     } catch {
       toast.error("Failed to reorder");
     }
@@ -127,7 +131,7 @@ export default function BundleDetailPage({ params }: { params: Promise<{ id: str
       toast.success("Cards added");
       setAddCardDialogOpen(false);
       setSelectedCardIds([]);
-      await load();
+      await loadRef.current?.();
     } catch {
       toast.error("Failed to add cards");
     }

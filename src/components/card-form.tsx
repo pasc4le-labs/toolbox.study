@@ -53,43 +53,44 @@ export function CardForm({ cardId, onSuccess }: CardFormProps) {
   const [selectedBundleIds, setSelectedBundleIds] = useState<number[]>([]);
   const [newTagInput, setNewTagInput] = useState("");
 
-  const loadInitial = useCallback(async () => {
-    try {
-      const { db } = await getDb();
-      const [tags, bundles] = await Promise.all([
-        getAllTags(db),
-        getAllBundles(db),
-      ]);
-      setAllTags(tags);
-      setAllBundles(bundles);
+  useEffect(() => {
+    async function loadInitial() {
+      try {
+        const { db } = await getDb();
+        const [tags, bundles] = await Promise.all([
+          getAllTags(db),
+          getAllBundles(db),
+        ]);
+        setAllTags(tags);
+        setAllBundles(bundles);
 
-      if (cardId) {
-        const card = await getCardById(db, cardId);
-        if (card) {
-          setType(card.type as CardType);
-          setFront(card.front);
-          setBack(card.back);
-          setExplanation(card.explanation ?? "");
-          if (card.options) {
-            setOptions(JSON.parse(card.options));
+        if (cardId) {
+          const card = await getCardById(db, cardId);
+          if (card) {
+            setType(card.type as CardType);
+            setFront(card.front);
+            setBack(card.back);
+            setExplanation(card.explanation ?? "");
+            if (card.options) {
+              setOptions(JSON.parse(card.options));
+            }
+            if (card.correctIndices) {
+              setCorrectIndices(JSON.parse(card.correctIndices));
+            }
+            const cardTags = await getCardTags(db, cardId);
+            setSelectedTagIds(cardTags.map((t) => t.id));
+            const cardBundles = await getCardBundles(db, cardId);
+            setSelectedBundleIds(cardBundles.map((b) => b.id));
           }
-          if (card.correctIndices) {
-            setCorrectIndices(JSON.parse(card.correctIndices));
-          }
-          const cardTags = await getCardTags(db, cardId);
-          setSelectedTagIds(cardTags.map((t) => t.id));
-          const cardBundles = await getCardBundles(db, cardId);
-          setSelectedBundleIds(cardBundles.map((b) => b.id));
         }
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setInitialLoading(false);
       }
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setInitialLoading(false);
     }
+    loadInitial();
   }, [cardId]);
-
-  useEffect(() => { loadInitial(); }, [loadInitial]);
 
   const handleTypeChange = (newType: CardType) => {
     setType(newType);

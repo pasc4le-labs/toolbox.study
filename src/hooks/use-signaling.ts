@@ -6,13 +6,13 @@ export type SignalingState = {
   status: "idle" | "connecting" | "waiting" | "paired" | "error";
   roomCode: string | null;
   error: string | null;
-  remoteSignal: any | null;
+  remoteSignal: unknown | null;
 };
 
 export type SignalingActions = {
   createRoom: () => void;
   joinRoom: (code: string) => void;
-  sendSignal: (data: any) => void;
+  sendSignal: (data: unknown) => void;
   disconnect: () => void;
 };
 
@@ -31,7 +31,9 @@ export function useSignaling(): [SignalingState, SignalingActions] {
 
   const wsRef = useRef<WebSocket | null>(null);
   const stateRef = useRef(state);
-  stateRef.current = state;
+  useEffect(() => {
+    stateRef.current = state;
+  }, [state]);
 
   const connect = useCallback(() => {
     if (wsRef.current?.readyState === WebSocket.OPEN) return;
@@ -136,7 +138,7 @@ export function useSignaling(): [SignalingState, SignalingActions] {
     [connect],
   );
 
-  const sendSignal = useCallback((data: any) => {
+  const sendSignal = useCallback((data: unknown) => {
     const ws = wsRef.current;
     if (ws?.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify({ type: "signal", data }));

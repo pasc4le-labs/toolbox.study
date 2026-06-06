@@ -90,16 +90,16 @@ test("create a bundle, create exam, take it, and see results", async ({ page }) 
   // Should navigate to exam page
   await page.waitForURL(/\/study-dome\/exams\/\d+/);
   await page.waitForLoadState("networkidle");
-  await page.waitForTimeout(500);
 
-  // Navigate through questions by clicking the first option label, then Next
+  // Wait for radio buttons to render
+  await page.waitForSelector("[role='radio']", { timeout: 5000 });
+
+  // Answer questions by clicking radio buttons, then Next
   for (let i = 0; i < 2; i++) {
-    // Click the first radio option's label to select it (triggers React onChange)
-    const firstLabel = page.locator("label[id^='q-opt-']").first();
-    if (await firstLabel.isVisible().catch(() => false)) {
-      await firstLabel.click();
-      await page.waitForTimeout(200);
-    }
+    // Click the first radio option
+    const firstRadio = page.locator("[role='radio']").first();
+    await firstRadio.click();
+    await page.waitForTimeout(200);
 
     // Click Next
     await page.locator("button:has-text('Next')").click();
@@ -117,18 +117,17 @@ test("create a bundle, create exam, take it, and see results", async ({ page }) 
   await expect(page.getByText("Question Breakdown")).toBeVisible();
   await expect(page.getByText("Back to Study Dome").first()).toBeVisible();
 
-  // Verify all 3 questions appear in results (2 answered + 1 unanswered)
-  const questionCards = page.locator("[class*='Question Breakdown']").locator("..").locator("~ div > div");
-  await expect(page.getByText("1.")).toBeVisible();
-  await expect(page.getByText("2.")).toBeVisible();
-  await expect(page.getByText("3.")).toBeVisible();
+  // Verify all 3 questions appear in results
+  await expect(page.getByText("1.", { exact: true })).toBeVisible();
+  await expect(page.getByText("2.", { exact: true })).toBeVisible();
+  await expect(page.getByText("3.", { exact: true })).toBeVisible();
 
-  // Verify unanswered question badge exists
-  await expect(page.getByText("Unanswered")).toBeVisible();
+  // Verify an unanswered question badge exists (question 3 was not answered)
+  await expect(page.locator("[data-slot='badge']").filter({ hasText: "Unanswered" })).toBeVisible();
 
   // Verify answered questions have Correct or Incorrect badges
-  const correctBadges = page.getByText("Correct", { exact: true });
-  const incorrectBadges = page.getByText("Incorrect", { exact: true });
+  const correctBadges = page.locator("[data-slot='badge']").filter({ hasText: /^Correct$/ });
+  const incorrectBadges = page.locator("[data-slot='badge']").filter({ hasText: /^Incorrect$/ });
   const totalAnsweredBadges = await correctBadges.count() + await incorrectBadges.count();
   expect(totalAnsweredBadges).toBeGreaterThanOrEqual(1);
 });

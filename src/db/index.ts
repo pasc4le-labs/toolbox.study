@@ -67,6 +67,7 @@ export async function getDb(): Promise<{
   _db = drizzle(_sqlDb, { schema });
 
   // Apply migrations
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (_db as any).dialect.migrate(migrations, (_db as any).session, {
     migrationsTable: '__drizzle_migrations',
   });

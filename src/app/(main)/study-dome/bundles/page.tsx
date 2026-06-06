@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { RiAddLine, RiDeleteBinLine, RiEditLine } from "@remixicon/react";
 import { Boxed } from "@/components/boxed";
@@ -23,19 +23,23 @@ export default function BundlesPage() {
   const [loading, setLoading] = useState(true);
   const [deleteId, setDeleteId] = useState<number | null>(null);
 
-  const load = useCallback(async () => {
-    try {
-      const { db } = await getDb();
-      const b = await getAllBundles(db);
-      setBundles(b);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const loadRef = useRef<() => Promise<void>>(undefined);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    async function load() {
+      try {
+        const { db } = await getDb();
+        const b = await getAllBundles(db);
+        setBundles(b);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadRef.current = load;
+    load();
+  }, []);
 
   const handleDelete = async () => {
     if (!deleteId) return;
@@ -44,7 +48,7 @@ export default function BundlesPage() {
       await deleteBundle(db, deleteId);
       toast.success("Bundle deleted");
       setDeleteId(null);
-      await load();
+      await loadRef.current?.();
     } catch {
       toast.error("Failed to delete bundle");
     }

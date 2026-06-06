@@ -78,7 +78,7 @@ export async function importExchangeData(
     }
 
     const newCard = await createCard(db, {
-      type: cardData.type as any,
+      type: cardData.type as "multi_radio" | "multi_select" | "open" | "knowledge",
       front: cardData.front,
       back: cardData.back,
       explanation: cardData.explanation,

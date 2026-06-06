@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { RiAddLine, RiSearchLine, RiDeleteBinLine, RiEditLine } from "@remixicon/react";
 import { Boxed } from "@/components/boxed";
@@ -28,31 +28,35 @@ export default function CardsPage() {
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
   const [cardTags, setCardTags] = useState<Record<number, Array<{ id: number; name: string }>>>({});
 
-  const load = useCallback(async () => {
-    try {
-      const { db } = await getDb();
-      const allCards = searchQuery.trim()
-        ? await searchCards(db, searchQuery.trim())
-        : await getAllCards(db);
-      setCards(allCards);
+  const loadRef = useRef<() => Promise<void>>(undefined);
 
-      // Load tags for each card
-      const tagsMap: Record<number, Array<{ id: number; name: string }>> = {};
-      await Promise.all(
-        allCards.map(async (c) => {
-          const tags = await getCardTags(db, c.id);
-          tagsMap[c.id] = tags;
-        }),
-      );
-      setCardTags(tagsMap);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    async function load() {
+      try {
+        const { db } = await getDb();
+        const allCards = searchQuery.trim()
+          ? await searchCards(db, searchQuery.trim())
+          : await getAllCards(db);
+        setCards(allCards);
+
+        // Load tags for each card
+        const tagsMap: Record<number, Array<{ id: number; name: string }>> = {};
+        await Promise.all(
+          allCards.map(async (c) => {
+            const tags = await getCardTags(db, c.id);
+            tagsMap[c.id] = tags;
+          }),
+        );
+        setCardTags(tagsMap);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
     }
+    loadRef.current = load;
+    load();
   }, [searchQuery]);
-
-  useEffect(() => { load(); }, [load]);
 
   const handleDelete = async () => {
     if (deleteConfirmId === null) return;
@@ -61,7 +65,7 @@ export default function CardsPage() {
       await deleteCard(db, deleteConfirmId);
       toast.success("Card deleted");
       setDeleteConfirmId(null);
-      await load();
+      await loadRef.current?.();
     } catch {
       toast.error("Failed to delete card");
     }
