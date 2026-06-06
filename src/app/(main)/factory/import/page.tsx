@@ -6,6 +6,7 @@ import {
   RiFileLine,
   RiCheckLine,
   RiArrowDownLine,
+  RiDownloadLine,
 } from "@remixicon/react";
 import { Boxed } from "@/components/boxed";
 import { Button } from "@/components/ui/button";
@@ -349,10 +350,24 @@ export default function ImportPage() {
               <li><code className="bg-muted px-1 rounded">{"{ \"cards\": [...], \"bundles\": [...] }"}</code> — cards + bundles</li>
               <li><code className="bg-muted px-1 rounded">{"[{ \"title\": \"...\", \"cards\": [...] }]"}</code> — bundles with embedded cards</li>
             </ul>
-            <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
-              <RiUploadLine className="mr-2 h-4 w-4" />
-              Choose JSON File
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
+                <RiUploadLine className="mr-2 h-4 w-4" />
+                Choose JSON File
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  const link = document.createElement("a");
+                  link.href = "/import-schema.json";
+                  link.download = "import-schema.json";
+                  link.click();
+                }}
+              >
+                <RiDownloadLine className="mr-2 h-4 w-4" />
+                Download Schema
+              </Button>
+            </div>
             <input
               ref={fileInputRef}
               type="file"

@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "StudyToolbox Import",
+  "description": "Schema for importing flashcards and bundles into StudyToolbox via JSON.",
+  "oneOf": [
+    {
+      "title": "Cards Only",
+      "type": "object",
+      "properties": {
+        "cards": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/card" }
+        }
+      },
+      "required": ["cards"],
+      "additionalProperties": false
+    },
+    {
+      "title": "Cards and Bundles",
+      "type": "object",
+      "properties": {
+        "cards": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/card" }
+        },
+        "bundles": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/bundle" }
+        }
+      },
+      "required": ["cards"],
+      "additionalProperties": false
+    },
+    {
+      "title": "Bundle Array",
+      "type": "array",
+      "items": { "$ref": "#/$defs/bundle" }
+    }
+  ],
+  "$defs": {
+    "card": {
+      "title": "Card",
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["knowledge", "open", "multi_radio", "multi_select"],
+          "description": "Card type: knowledge (simple Q&A), open (free text), multi_radio (single-answer MCQ), multi_select (multi-answer MCQ).",
+          "default": "knowledge"
+        },
+        "front": {
+          "type": "string",
+          "description": "The question or prompt text."
+        },
+        "back": {
+          "type": "string",
+          "description": "The answer or response text."
+        },
+        "explanation": {
+          "type": "string",
+          "description": "Optional explanation shown after answering."
+        },
+        "options": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Answer options (required for multi_radio / multi_select)."
+        },
+        "correctIndices": {
+          "type": "array",
+          "items": { "type": "integer" },
+          "description": "Zero-based indices of correct options (required for multi_radio / multi_select)."
+        },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Tag names to assign to this card. Tags are created if they don't exist."
+        }
+      },
+      "required": ["front", "back"],
+      "additionalProperties": false
+    },
+    "bundle": {
+      "title": "Bundle",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "Bundle title."
+        },
+        "description": {
+          "type": "string",
+          "description": "Optional bundle description."
+        },
+        "cards": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/card" },
+          "description": "Cards embedded in this bundle."
+        }
+      },
+      "required": ["title", "cards"],
+      "additionalProperties": false
+    }
+  }
+}
