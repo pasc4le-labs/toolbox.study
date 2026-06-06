@@ -16,7 +16,7 @@ export interface TaggerProgress {
   message: string;
 }
 
-function normalizeTagName(name: string): string {
+export function normalizeTagName(name: string): string {
   return name
     .trim()
     .toLowerCase()
@@ -88,7 +88,7 @@ function createModel(provider: AiProvider) {
 /**
  * Build the prompt for a batch of cards.
  */
-function buildBatchPrompt(
+export function buildBatchPrompt(
   batchCards: Card[],
   existingTagNames: string[],
 ): string {

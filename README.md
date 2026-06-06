@@ -193,3 +193,18 @@ See [`docs/relay-deployment.md`](docs/relay-deployment.md) for Docker and produc
 - [`docs/architecture.md`](docs/architecture.md) — System architecture and data flow
 - [`docs/exchange-center.md`](docs/exchange-center.md) — How to use the Exchange Center
 - [`docs/relay-deployment.md`](docs/relay-deployment.md) — Relay deployment guide
+- [`docs/testing.md`](docs/testing.md) — Running and writing tests (unit, integration, E2E)
+
+## Testing
+
+The project has 200+ Vitest unit/integration tests and 40+ Playwright E2E tests covering all `lib/**` and `lib/services/**` modules plus major user flows.
+
+```bash
+pnpm test              # unit + integration tests
+pnpm test:watch        # unit tests in watch mode
+pnpm test:coverage     # unit tests with coverage report
+pnpm test:e2e          # Playwright E2E suite (auto-starts dev server)
+pnpm test:e2e:headed   # E2E in headed mode for debugging
+```
+
+See [`docs/testing.md`](docs/testing.md) for the full guide, including how to add new tests.

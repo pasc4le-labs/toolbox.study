@@ -108,13 +108,15 @@ export async function startExamAttempt(
   if (!attempt) throw new Error('Failed to create exam attempt');
 
   // Persist selected questions
-  await db.insert(schema.examQuestions).values(
-    selected.map((r, i) => ({
-      attemptId: attempt.id,
-      cardId: r.cards.id,
-      order: i,
-    })),
-  );
+  if (selected.length > 0) {
+    await db.insert(schema.examQuestions).values(
+      selected.map((r, i) => ({
+        attemptId: attempt.id,
+        cardId: r.cards.id,
+        order: i,
+      })),
+    );
+  }
 
   // Insert answers (empty placeholders for navigation)
   const questions = selected.map((r, i) => ({
