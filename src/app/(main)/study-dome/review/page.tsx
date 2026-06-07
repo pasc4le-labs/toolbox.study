@@ -11,6 +11,7 @@ import {
 } from "@remixicon/react";
 import { PageTitle } from "@/components/page-title";
 import { Boxed } from "@/components/boxed";
+import { RenderLatex } from "@/components/render-latex";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -163,7 +164,7 @@ function ReviewContent() {
             <div className="mb-6 space-y-2">
               {results.map((r, i) => (
                 <div key={i} className="flex items-center justify-between rounded-md border p-2 text-sm">
-                  <span className="line-clamp-1 flex-1">{r.front}</span>
+                  <span className="line-clamp-1 flex-1"><RenderLatex content={r.front} /></span>
                   <Badge variant="secondary" className="ml-2 shrink-0">
                     {["", "Again", "Hard", "Good", "Easy"][r.rating]}
                   </Badge>
@@ -211,7 +212,7 @@ function ReviewContent() {
           {/* Front */}
           <div className="mb-6">
             <h3 className="mb-2 text-sm font-medium text-muted-foreground">Question</h3>
-            <p className="whitespace-pre-wrap text-lg">{current.card.front}</p>
+            <div className="whitespace-pre-wrap text-lg"><RenderLatex content={current.card.front} /></div>
           </div>
 
           {/* Interactive options for multi-choice questions */}
@@ -226,7 +227,7 @@ function ReviewContent() {
                     <div key={i} className="flex items-center gap-2 rounded-md border p-3">
                       <RadioGroupItem value={i.toString()} id={`opt-${i}`} />
                       <Label htmlFor={`opt-${i}`} className="flex-1 cursor-pointer">
-                        {opt}
+                        <RenderLatex content={opt} />
                       </Label>
                     </div>
                   ))}
@@ -247,7 +248,7 @@ function ReviewContent() {
                         }
                       />
                       <Label htmlFor={`opt-${i}`} className="flex-1 cursor-pointer">
-                        {opt}
+                        <RenderLatex content={opt} />
                       </Label>
                     </div>
                   ))}
@@ -273,7 +274,7 @@ function ReviewContent() {
             <div className="space-y-4">
               <div>
                 <h3 className="mb-2 text-sm font-medium text-muted-foreground">Answer</h3>
-                <p className="whitespace-pre-wrap text-lg">{current.card.back}</p>
+                <div className="whitespace-pre-wrap text-lg"><RenderLatex content={current.card.back} /></div>
               </div>
 
               {/* Show correctness for multi-choice */}
@@ -298,7 +299,7 @@ function ReviewContent() {
                         }`}
                       >
                         <span className="mr-2">{isCorrect ? "✓" : userSelected ? "✗" : ""}</span>
-                        {opt}
+                        <RenderLatex content={opt} />
                         {isCorrect && (
                           <Badge className="ml-2 bg-green-600 text-xs">Correct</Badge>
                         )}
@@ -312,7 +313,7 @@ function ReviewContent() {
                 <div>
                   <h3 className="mb-2 text-sm font-medium text-muted-foreground">Explanation</h3>
                   <p className="whitespace-pre-wrap text-muted-foreground">
-                    {current.card.explanation}
+                    <RenderLatex content={current.card.explanation} />
                   </p>
                 </div>
               )}

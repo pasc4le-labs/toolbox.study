@@ -13,6 +13,7 @@ import {
 } from "@remixicon/react";
 import { PageTitle } from "@/components/page-title";
 import { Boxed } from "@/components/boxed";
+import { RenderLatex } from "@/components/render-latex";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
@@ -428,7 +429,7 @@ export default function TaggerPage() {
                       >
                         <Badge variant="secondary">{card.type.replace("_", " ")}</Badge>
                         <span className="flex-1 truncate text-sm">
-                          {card.front}
+                          <RenderLatex content={card.front} />
                         </span>
                       </div>
                     ))}
@@ -558,7 +559,7 @@ export default function TaggerPage() {
                                       {card?.type?.replace("_", " ") ?? "card"}
                                     </Badge>
                                     <span className="truncate text-sm font-medium">
-                                      {card?.front ?? "Unknown card"}
+                                      {card?.front ? <RenderLatex content={card.front} /> : "Unknown card"}
                                     </span>
                                   </div>
                                   <div className="flex flex-wrap gap-1">

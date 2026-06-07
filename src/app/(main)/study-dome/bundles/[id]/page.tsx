@@ -17,6 +17,7 @@ import {
 } from "@remixicon/react";
 import { PageTitle } from "@/components/page-title";
 import { Boxed } from "@/components/boxed";
+import { RenderLatex } from "@/components/render-latex";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -416,7 +417,7 @@ export default function BundleDetailPage({ params }: { params: Promise<{ id: str
                     href={`/study-dome/cards/${row.cards.id}`}
                     className="font-medium hover:underline"
                   >
-                    {row.cards.front}
+                    <RenderLatex content={row.cards.front} />
                   </Link>
                   <Badge variant="secondary" className="ml-2">
                     {row.cards.type.replace("_", " ")}
@@ -478,7 +479,7 @@ export default function BundleDetailPage({ params }: { params: Promise<{ id: str
                     )
                   }
                 >
-                  <p className="font-medium">{card.front}</p>
+                  <div className="font-medium"><RenderLatex content={card.front} /></div>
                   <Badge variant="secondary" className="mt-1">
                     {card.type.replace("_", " ")}
                   </Badge>

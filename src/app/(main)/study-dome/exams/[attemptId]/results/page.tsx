@@ -5,6 +5,7 @@ import Link from "next/link";
 import { RiCheckLine, RiCloseLine, RiArrowLeftLine, RiRefreshLine } from "@remixicon/react";
 import { PageTitle } from "@/components/page-title";
 import { Boxed } from "@/components/boxed";
+import { RenderLatex } from "@/components/render-latex";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -216,7 +217,7 @@ export default function ExamResultsPage({ params }: { params: Promise<{ attemptI
 
                 {card && (
                   <>
-                    <p className="mb-2 font-medium">{card.front}</p>
+                    <div className="mb-2 font-medium"><RenderLatex content={card.front} /></div>
                     {(pointsPerCorrect !== 1 || pointsPerWrong !== 0) && (
                       <span className="text-xs text-muted-foreground">
                         {a.isCorrect ? `+${pointsPerCorrect}` : a.isCorrect === false ? `${pointsPerWrong}` : '—'}
@@ -242,7 +243,7 @@ export default function ExamResultsPage({ params }: { params: Promise<{ attemptI
                                     : ""
                               }`}
                             >
-                              {opt}
+                              <RenderLatex content={opt} />
                               {isCorrectOpt && <Badge className="ml-2 bg-green-600 text-xs">Correct</Badge>}
                             </div>
                           );
@@ -254,18 +255,18 @@ export default function ExamResultsPage({ params }: { params: Promise<{ attemptI
                     {card.type === "open" && a.answer !== null && (
                       <div className="space-y-1 text-sm">
                         <p><span className="text-muted-foreground">Your answer:</span> {a.answer || "(blank)"}</p>
-                        <p><span className="text-muted-foreground">Correct answer:</span> {card.back}</p>
+                        <p><span className="text-muted-foreground">Correct answer:</span> <RenderLatex content={card.back} /></p>
                       </div>
                     )}
                     {card.type === "open" && a.answer === null && (
                       <div className="space-y-1 text-sm">
                         <p><span className="text-muted-foreground">Your answer:</span> <em className="text-muted-foreground">(not answered)</em></p>
-                        <p><span className="text-muted-foreground">Correct answer:</span> {card.back}</p>
+                        <p><span className="text-muted-foreground">Correct answer:</span> <RenderLatex content={card.back} /></p>
                       </div>
                     )}
 
                     {card.type === "knowledge" && (
-                      <p className="text-sm text-muted-foreground">{card.back}</p>
+                      <div className="text-sm text-muted-foreground"><RenderLatex content={card.back} /></div>
                     )}
                   </>
                 )}

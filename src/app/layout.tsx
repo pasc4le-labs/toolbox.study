@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Raleway } from "next/font/google";
 import "./globals.css";
+import "katex/dist/katex.min.css";
 import { cn } from "@/lib/utils";
 import { Toaster } from "@/components/ui/sonner";
 import { DbReset } from "@/components/db-reset";

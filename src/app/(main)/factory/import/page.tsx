@@ -12,6 +12,7 @@ import {
 } from "@remixicon/react";
 import { PageTitle } from "@/components/page-title";
 import { Boxed } from "@/components/boxed";
+import { RenderLatex } from "@/components/render-latex";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -521,7 +522,7 @@ Commento: Optional explanation`}</pre>
               <li>No options between Question and Answer → <strong>open</strong> question (Answer is the full text)</li>
               <li>Use <code className="bg-muted px-1 rounded">---</code> on its own line to separate cards</li>
               <li>LLM-tolerant: <code className="bg-muted px-1 rounded">- A)</code>, <code className="bg-muted px-1 rounded">* B)</code>, <code className="bg-muted px-1 rounded">**A.**</code> all parse as the same option</li>
-              <li>Multi-line questions, LaTeX (<code className="bg-muted px-1 rounded">$x^2$</code>), and Markdown are preserved verbatim</li>
+              <li>Multi-line questions and Markdown are preserved verbatim; LaTeX (<code className="bg-muted px-1 rounded">$x^2$</code>) is rendered as math</li>
             </ul>
             <div className="flex flex-wrap gap-2">
               <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
@@ -618,7 +619,7 @@ Commento: Optional explanation`}</pre>
                           <Badge variant="secondary">{i + 1}</Badge>
                           <Badge>{CARD_TYPE_LABELS[card.type]}</Badge>
                         </div>
-                        <p className="mb-1 whitespace-pre-wrap text-sm font-medium">{card.front}</p>
+                        <div className="mb-1 whitespace-pre-wrap text-sm font-medium"><RenderLatex content={card.front} /></div>
                         {card.options && card.options.length > 0 && (
                           <div className="space-y-1">
                             {card.options.map((opt, j) => {
@@ -633,7 +634,7 @@ Commento: Optional explanation`}</pre>
                                   }`}
                                 >
                                   <span className="mr-1 font-bold">{String.fromCharCode(65 + j)})</span>
-                                  <span className="whitespace-pre-wrap">{opt}</span>
+                                  <span className="whitespace-pre-wrap"><RenderLatex content={opt} /></span>
                                   {isCorrect && (
                                     <Badge className="ml-1 bg-green-600 text-xs">✓</Badge>
                                   )}
@@ -644,12 +645,12 @@ Commento: Optional explanation`}</pre>
                         )}
                         {card.type === "open" && card.back && (
                           <div className="mt-1 rounded border bg-muted/30 p-2 text-xs whitespace-pre-wrap">
-                            <span className="font-semibold">Answer:</span> {card.back}
+                            <span className="font-semibold">Answer:</span> <RenderLatex content={card.back} />
                           </div>
                         )}
                         {card.explanation && (
                           <p className="mt-1 text-xs whitespace-pre-wrap text-muted-foreground">
-                            {card.explanation}
+                            <RenderLatex content={card.explanation} />
                           </p>
                         )}
                       </CardContent>

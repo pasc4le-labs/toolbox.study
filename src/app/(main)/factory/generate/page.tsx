@@ -14,6 +14,7 @@ import {
 } from "@remixicon/react";
 import { PageTitle } from "@/components/page-title";
 import { Boxed } from "@/components/boxed";
+import { RenderLatex } from "@/components/render-latex";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -789,14 +790,13 @@ ${attachedFiles.length > 0 ? `${attachedFiles.length} file(s) are attached for y
                       </div>
 
                       {/* Front — always visible */}
-                      <p className="mb-1 font-medium">{card.front}</p>
+                      <div className="mb-1 font-medium"><RenderLatex content={card.front} /></div>
 
-                      {/* Back + details — visible by default, slightly muted */}
                       <div className="text-sm text-muted-foreground">
-                        <p>{card.back}</p>
+                        <div><RenderLatex content={card.back} /></div>
                         {card.explanation && (
                           <p className="mt-1 text-xs">
-                            {card.explanation}
+                            <RenderLatex content={card.explanation} />
                           </p>
                         )}
                         {card.options && (
@@ -810,7 +810,7 @@ ${attachedFiles.length > 0 ? `${attachedFiles.length} file(s) are attached for y
                                     : ""
                                 }`}
                               >
-                                {opt}
+                                <RenderLatex content={opt} />
                                 {card.correctIndices?.includes(j) && (
                                   <Badge className="ml-1 bg-green-600 text-xs">
                                     Correct

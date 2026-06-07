@@ -3,6 +3,7 @@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { RenderLatex } from "@/components/render-latex";
 
 export type PickerItem = {
   id: number;
@@ -74,7 +75,7 @@ export function ItemPicker({
               onCheckedChange={() => toggle(toKey(kind, item.id))}
             />
             <div className="flex-1">
-              <p className="text-sm font-medium">{item.name}</p>
+              <div className="text-sm font-medium"><RenderLatex content={item.name} /></div>
               {item.meta && (
                 <p className="text-xs text-muted-foreground">{item.meta}</p>
               )}

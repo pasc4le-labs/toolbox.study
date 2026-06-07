@@ -580,15 +580,20 @@ Explanation: Derived by *completing the square*:
   await page.goto("/study-dome/cards");
   await page.waitForLoadState("networkidle");
 
-  // Card front preserves Markdown/LaTeX verbatim
+  // Card front preserves Markdown verbatim (markdown is not rendered, only LaTeX is)
   await expect(page.getByText(/Derive the \*\*quadratic formula\*\*/)).toBeVisible();
 
   // Open the card and verify multi-line content is preserved
   await page.getByText(/Derive the \*\*quadratic formula\*\*/).click();
   await page.waitForURL(/\/study-dome\/cards\/\d+/);
   await expect(page.getByText(/quadratic formula is:/)).toBeVisible();
-  // Verify LaTeX formula is preserved verbatim
-  await expect(page.getByText("$$x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$$")).toBeVisible();
+  // Verify LaTeX renders via KaTeX (produces .katex elements in the DOM)
+  await expect(page.locator(".katex").first()).toBeVisible();
+  // Display math produces a .katex-display block
+  await expect(page.locator(".katex-display").first()).toBeVisible();
+  // Plain text surrounding the inline math is still visible
+  await expect(page.getByText(/equations of the form/i)).toBeVisible();
+  // Markdown italics in the explanation remain as plain text (not rendered)
   await expect(page.getByText(/Derived by \*completing the square\*/)).toBeVisible();
 
   await fs.promises.unlink(tmpFile);

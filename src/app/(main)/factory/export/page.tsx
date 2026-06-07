@@ -6,6 +6,7 @@ import {
 } from "@remixicon/react";
 import { PageTitle } from "@/components/page-title";
 import { Boxed } from "@/components/boxed";
+import { RenderLatex } from "@/components/render-latex";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
@@ -354,9 +355,9 @@ export default function ExportPage() {
                       onCheckedChange={() => toggleCard(card.id)}
                     />
                     <Badge variant="secondary">{card.type.replace("_", " ")}</Badge>
-                    <span className="flex-1 truncate text-sm">{card.front}</span>
+                    <span className="flex-1 truncate text-sm"><RenderLatex content={card.front} /></span>
                     <span className="hidden max-w-[200px] truncate text-xs text-muted-foreground sm:inline">
-                      {card.back}
+                      <RenderLatex content={card.back} />
                     </span>
                   </CardContent>
                 </Card>

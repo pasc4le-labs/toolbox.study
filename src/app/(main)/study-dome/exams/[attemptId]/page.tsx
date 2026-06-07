@@ -13,6 +13,7 @@ import {
 import { Icon } from "@iconify/react";
 import { PageTitle } from "@/components/page-title";
 import { Boxed } from "@/components/boxed";
+import { RenderLatex } from "@/components/render-latex";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -405,7 +406,7 @@ export default function ExamAttemptPage({ params }: { params: Promise<{ attemptI
                     </Badge>
                   </div>
 
-                  <p className="mb-6 whitespace-pre-wrap text-lg">{current.front}</p>
+                  <div className="mb-6 whitespace-pre-wrap text-lg"><RenderLatex content={current.front} /></div>
 
                   {current.type === "multi_radio" && parsedOptions && (
                     <RadioGroup
@@ -416,7 +417,7 @@ export default function ExamAttemptPage({ params }: { params: Promise<{ attemptI
                         <div key={i} className="flex items-center gap-2 rounded-md border p-3">
                           <RadioGroupItem value={i.toString()} id={`q-opt-${i}`} />
                           <Label htmlFor={`q-opt-${i}`} className="flex-1 cursor-pointer">
-                            {opt}
+                            <RenderLatex content={opt} />
                           </Label>
                         </div>
                       ))}
@@ -433,7 +434,7 @@ export default function ExamAttemptPage({ params }: { params: Promise<{ attemptI
                             onCheckedChange={() => handleCheckboxAnswer(i)}
                           />
                           <Label htmlFor={`q-opt-${i}`} className="flex-1 cursor-pointer">
-                            {opt}
+                            <RenderLatex content={opt} />
                           </Label>
                         </div>
                       ))}

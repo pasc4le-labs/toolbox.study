@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { RiEditLine, RiDeleteBinLine, RiArrowLeftLine } from "@remixicon/react";
 import { PageTitle } from "@/components/page-title";
 import { Boxed } from "@/components/boxed";
+import { RenderLatex } from "@/components/render-latex";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -131,7 +132,7 @@ export default function CardDetailPage({ params }: { params: Promise<{ id: strin
             <CardTitle className="text-lg">Front</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="whitespace-pre-wrap">{card.front}</p>
+            <div className="whitespace-pre-wrap"><RenderLatex content={card.front} /></div>
           </CardContent>
         </Card>
 
@@ -140,7 +141,7 @@ export default function CardDetailPage({ params }: { params: Promise<{ id: strin
             <CardTitle className="text-lg">Back</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="whitespace-pre-wrap">{card.back}</p>
+            <div className="whitespace-pre-wrap"><RenderLatex content={card.back} /></div>
           </CardContent>
         </Card>
       </div>
@@ -151,7 +152,7 @@ export default function CardDetailPage({ params }: { params: Promise<{ id: strin
             <CardTitle className="text-lg">Explanation</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="whitespace-pre-wrap text-muted-foreground">{card.explanation}</p>
+            <div className="whitespace-pre-wrap text-muted-foreground"><RenderLatex content={card.explanation} /></div>
           </CardContent>
         </Card>
       )}
@@ -173,7 +174,7 @@ export default function CardDetailPage({ params }: { params: Promise<{ id: strin
                     }`}
                   >
                     <span className="mr-2 font-mono text-sm text-muted-foreground">{i + 1}.</span>
-                    {opt}
+                    <RenderLatex content={opt} />
                     {isCorrect && (
                       <Badge variant="default" className="ml-2 bg-green-600">
                         Correct

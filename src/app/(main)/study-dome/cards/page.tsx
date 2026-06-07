@@ -5,6 +5,7 @@ import Link from "next/link";
 import { RiAddLine, RiSearchLine, RiDeleteBinLine, RiEditLine } from "@remixicon/react";
 import { PageTitle } from "@/components/page-title";
 import { Boxed } from "@/components/boxed";
+import { RenderLatex } from "@/components/render-latex";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -127,8 +128,8 @@ export default function CardsPage() {
                     <div className="mb-1 flex items-center gap-2">
                       <Badge variant="secondary">{card.type.replace("_", " ")}</Badge>
                     </div>
-                    <p className="font-medium line-clamp-1">{card.front}</p>
-                    <p className="mt-1 text-sm text-muted-foreground line-clamp-1">{card.back}</p>
+                    <div className="font-medium line-clamp-1"><RenderLatex content={card.front} /></div>
+                    <div className="mt-1 text-sm text-muted-foreground line-clamp-1"><RenderLatex content={card.back} /></div>
                     {cardTags[card.id] && cardTags[card.id].length > 0 && (
                       <div className="mt-2 flex flex-wrap gap-1">
                         {cardTags[card.id].map((tag) => (
