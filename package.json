@@ -12,6 +12,7 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "cd e2e && pnpm exec playwright test",
+    "test:e2e:all": "cd e2e && pnpm exec playwright test --project=chromium --project=mobile-chrome --project=mobile-safari",
     "test:e2e:headed": "cd e2e && pnpm exec playwright test --headed",
     "postinstall": "node copy-wasm.mjs",
     "db:generate": "drizzle-kit generate",
