@@ -4,9 +4,10 @@ import "encoding/json"
 
 // Inbound messages from clients.
 type InMessage struct {
-	Type string          `json:"type"`
-	Code json.RawMessage `json:"code,omitempty"`
-	Data json.RawMessage `json:"data,omitempty"`
+	Type     string          `json:"type"`
+	Code     json.RawMessage `json:"code,omitempty"`
+	Data     json.RawMessage `json:"data,omitempty"`
+	RoomType string          `json:"room_type,omitempty"`
 }
 
 // Outbound messages to clients.

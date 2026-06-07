@@ -20,10 +20,10 @@ const codeAlphabet = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"
 
 // Hub manages all rooms and clients.
 type Hub struct {
-	rooms    map[string]*Room
-	clients  map[string]*Client
-	config   Config
-	mu       sync.RWMutex
+	rooms   map[string]*Room
+	clients map[string]*Client
+	config  Config
+	mu      sync.RWMutex
 }
 
 func NewHub(config Config) *Hub {
@@ -72,6 +72,71 @@ func (h *Hub) CreateRoom(c *Client) string {
 	return code
 }
 
+func (h *Hub) CreateRoomWithType(c *Client, roomType RoomType) string {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+
+	var code string
+	for {
+		code = h.generateCode()
+		if _, exists := h.rooms[code]; !exists {
+			break
+		}
+	}
+
+	room := NewRoomWithType(code, roomType)
+	room.AddClient(c)
+	h.rooms[code] = room
+	h.clients[c.ID] = c
+
+	return code
+}
+
+func (h *Hub) CreateOrJoinSyncRoom(c *Client, code string) error {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+
+	if room, exists := h.rooms[code]; exists {
+		if room.IsExpiredWithTTLs(h.config.RoomTTL, h.config.SyncRoomTTL) {
+			delete(h.rooms, code)
+			return errRoomExpired
+		}
+		if !room.AddClient(c) {
+			return errRoomFull
+		}
+		h.clients[c.ID] = c
+		for _, peer := range room.Clients {
+			other := room.Other(peer)
+			if other != nil {
+				peer.Send(OutMessage{Type: "peer_joined", PeerID: other.ID})
+			}
+		}
+		return nil
+	}
+
+	room := NewRoomWithType(code, RoomTypeSync)
+	room.AddClient(c)
+	h.rooms[code] = room
+	h.clients[c.ID] = c
+	return nil
+}
+
+func (h *Hub) CreateSyncRoom(c *Client, code string) error {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+
+	if _, exists := h.rooms[code]; exists {
+		return errors.New("room already exists")
+	}
+
+	room := NewRoomWithType(code, RoomTypeSync)
+	room.AddClient(c)
+	h.rooms[code] = room
+	h.clients[c.ID] = c
+
+	return nil
+}
+
 func (h *Hub) JoinRoom(c *Client, code string) error {
 	h.mu.Lock()
 	defer h.mu.Unlock()
@@ -80,7 +145,7 @@ func (h *Hub) JoinRoom(c *Client, code string) error {
 	if !exists {
 		return errRoomNotFound
 	}
-	if room.IsExpired(h.config.RoomTTL) {
+	if room.IsExpiredWithTTLs(h.config.RoomTTL, h.config.SyncRoomTTL) {
 		delete(h.rooms, code)
 		return errRoomExpired
 	}
@@ -133,10 +198,12 @@ func (h *Hub) unregister(c *Client) {
 
 		if other != nil {
 			other.Send(OutMessage{Type: "peer_left"})
-			// Don't close the other peer's connection; let it handle disconnection itself
 		}
 
-		delete(h.rooms, room.Code)
+		// Only delete exchange rooms immediately; sync rooms persist for reconnection
+		if room.Type == RoomTypeExchange {
+			delete(h.rooms, room.Code)
+		}
 	}
 
 	c.Close()
@@ -145,8 +212,27 @@ func (h *Hub) unregister(c *Client) {
 func (h *Hub) handleMessage(c *Client, msg InMessage) {
 	switch msg.Type {
 	case "create_room":
-		code := h.CreateRoom(c)
-		c.Send(OutMessage{Type: "room_created", Code: code})
+		if msg.RoomType == "sync" {
+			var code string
+			if msg.Code != nil {
+				if err := json.Unmarshal(msg.Code, &code); err != nil {
+					c.Send(OutMessage{Type: "error", Message: "invalid room code"})
+					return
+				}
+			}
+			if code == "" {
+				c.Send(OutMessage{Type: "error", Message: "code required for sync room"})
+				return
+			}
+			if err := h.CreateOrJoinSyncRoom(c, code); err != nil {
+				c.Send(OutMessage{Type: "error", Message: err.Error()})
+				return
+			}
+			c.Send(OutMessage{Type: "room_created", Code: code})
+		} else {
+			code := h.CreateRoom(c)
+			c.Send(OutMessage{Type: "room_created", Code: code})
+		}
 
 	case "join_room":
 		var code string
@@ -173,7 +259,7 @@ func (h *Hub) RunSweep() {
 	for range ticker.C {
 		h.mu.Lock()
 		for code, room := range h.rooms {
-			if room.IsExpired(h.config.RoomTTL) {
+			if room.IsExpiredWithTTLs(h.config.RoomTTL, h.config.SyncRoomTTL) {
 				for _, c := range room.Clients {
 					c.Send(OutMessage{Type: "error", Message: "room expired"})
 					c.Close()

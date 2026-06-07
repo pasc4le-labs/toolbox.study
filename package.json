@@ -25,6 +25,7 @@
     "@ai-sdk/openai-compatible": "^2.0.48",
     "@iconify/react": "^6.0.2",
     "@remixicon/react": "^4.9.0",
+    "@scure/bip39": "^2.2.0",
     "@unovis/react": "^1.6.5",
     "@unovis/ts": "^1.6.5",
     "ai": "^6.0.191",

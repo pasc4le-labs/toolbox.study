@@ -1,5 +1,6 @@
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
+import { SyncProvider } from "@/components/sync-provider";
 
 export default function MainLayout({
   children,
@@ -10,7 +11,9 @@ export default function MainLayout({
     <>
       <div className="min-h-screen max-h-screen h-screen overflow-y-auto">
         <Navbar />
-        <main className="flex-1 flex flex-col overflow-y-auto">{children}</main>
+        <main className="flex-1 flex flex-col overflow-y-auto">
+          <SyncProvider>{children}</SyncProvider>
+        </main>
       </div>
       <Footer />
     </>

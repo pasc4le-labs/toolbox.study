@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { RiLoopLeftLine } from "@remixicon/react";
 import { Boxed } from "@/components/boxed";
 import { ModeToggle } from "@/components/mode-toggle";
 import { MobileNav } from "@/components/mobile-nav";
@@ -40,6 +41,13 @@ export function Navbar() {
               className="text-muted-foreground transition-colors hover:text-foreground"
             >
               Exchange Center
+            </Link>
+            <Link
+              href="/sync"
+              className="text-muted-foreground transition-colors hover:text-foreground"
+              aria-label="Device Sync"
+            >
+              <RiLoopLeftLine className="h-5 w-5" />
             </Link>
           </nav>
           <ModeToggle />

@@ -5,9 +5,17 @@ import (
 	"time"
 )
 
-// Room holds exactly two peers for signaling.
+type RoomType string
+
+const (
+	RoomTypeExchange RoomType = "exchange"
+	RoomTypeSync     RoomType = "sync"
+)
+
+// Room holds peers for signaling.
 type Room struct {
 	Code      string
+	Type      RoomType
 	Clients   map[string]*Client
 	createdAt time.Time
 	mu        sync.RWMutex
@@ -16,6 +24,16 @@ type Room struct {
 func NewRoom(code string) *Room {
 	return &Room{
 		Code:      code,
+		Type:      RoomTypeExchange,
+		Clients:   make(map[string]*Client),
+		createdAt: time.Now(),
+	}
+}
+
+func NewRoomWithType(code string, roomType RoomType) *Room {
+	return &Room{
+		Code:      code,
+		Type:      roomType,
 		Clients:   make(map[string]*Client),
 		createdAt: time.Now(),
 	}
@@ -51,6 +69,14 @@ func (r *Room) Other(c *Client) *Client {
 }
 
 func (r *Room) IsExpired(ttl time.Duration) bool {
+	return time.Since(r.createdAt) > ttl
+}
+
+func (r *Room) IsExpiredWithTTLs(exchangeTTL, syncTTL time.Duration) bool {
+	ttl := exchangeTTL
+	if r.Type == RoomTypeSync {
+		ttl = syncTTL
+	}
 	return time.Since(r.createdAt) > ttl
 }
 

@@ -21,6 +21,7 @@ const navLinks = [
   { label: "Study Dome", href: "/study-dome" },
   { label: "Factory", href: "/factory" },
   { label: "Exchange Center", href: "/exchange-center" },
+  { label: "Sync", href: "/sync" },
 ] as const
 
 export function MobileNav() {
