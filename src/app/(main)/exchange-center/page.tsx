@@ -1,6 +1,11 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { RiUploadLine, RiDownloadLine } from "@remixicon/react";
 import { Boxed } from "@/components/boxed";
+
+export const metadata: Metadata = {
+  title: "Exchange Center",
+};
 
 export default function ExchangeCenterPage() {
   return (

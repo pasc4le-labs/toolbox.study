@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { RiAddLine, RiDeleteBinLine, RiEditLine } from "@remixicon/react";
+import { PageTitle } from "@/components/page-title";
 import { Boxed } from "@/components/boxed";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -57,6 +58,7 @@ export default function BundlesPage() {
   return (
     <Boxed className="py-8">
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <PageTitle>Bundles</PageTitle>
         <h1 className="text-3xl font-bold tracking-tight">Bundles</h1>
         <Button asChild>
           <Link href="/study-dome/bundles/new">

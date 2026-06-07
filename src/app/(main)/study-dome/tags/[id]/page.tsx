@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, use } from "react";
 import Link from "next/link";
 import { RiArrowLeftLine, RiBookOpenLine } from "@remixicon/react";
+import { PageTitle } from "@/components/page-title";
 import { Boxed } from "@/components/boxed";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -53,6 +54,7 @@ export default function TagDetailPage({ params }: { params: Promise<{ id: string
 
       <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
+          <PageTitle>Tag Detail</PageTitle>
           <h1 className="text-3xl font-bold tracking-tight">{tagName || `Tag #${tagId}`}</h1>
           <p className="mt-1 text-muted-foreground">
             {cards.length} card{cards.length !== 1 ? "s" : ""} with this tag

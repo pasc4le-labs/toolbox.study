@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { RiBookOpenLine } from "@remixicon/react";
+import { PageTitle } from "@/components/page-title";
 import { Boxed } from "@/components/boxed";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -33,6 +34,7 @@ export default function TagsPage() {
   return (
     <Boxed className="py-8">
       <div className="mb-6">
+        <PageTitle>Tags</PageTitle>
         <h1 className="text-3xl font-bold tracking-tight">Tags</h1>
         <p className="mt-1 text-muted-foreground">
           Per-tag FSRS statistics

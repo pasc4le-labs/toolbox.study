@@ -9,6 +9,7 @@ import {
   RiTimeLine,
   RiBrainLine,
 } from "@remixicon/react";
+import { PageTitle } from "@/components/page-title";
 import { Boxed } from "@/components/boxed";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -123,7 +124,8 @@ function ReviewContent() {
         <Card className="border-dashed">
           <CardContent className="py-16 text-center">
             <RiBrainLine className="mx-auto mb-4 h-16 w-16 text-muted-foreground" />
-            <h2 className="mb-2 text-2xl font-bold">No Cards Due!</h2>
+            <PageTitle>Review</PageTitle>
+        <h2 className="mb-2 text-2xl font-bold">No Cards Due!</h2>
             <p className="mb-6 text-muted-foreground">
               All caught up! Come back later for more review.
             </p>

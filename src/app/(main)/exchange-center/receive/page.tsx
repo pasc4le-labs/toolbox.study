@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { PageTitle } from "@/components/page-title";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -172,6 +173,7 @@ export default function ReceivePage() {
     return (
       <div className="flex flex-col items-center justify-center py-24">
         <Card className="w-full max-w-md p-8">
+          <PageTitle>Receive</PageTitle>
           <h1 className="text-xl font-bold">Receive Items</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             Enter the room code shared by your peer.

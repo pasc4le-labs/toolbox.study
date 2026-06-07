@@ -8,6 +8,7 @@ import {
   RiArrowDownLine,
   RiDownloadLine,
 } from "@remixicon/react";
+import { PageTitle } from "@/components/page-title";
 import { Boxed } from "@/components/boxed";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -315,6 +316,7 @@ export default function ImportPage() {
   return (
     <Boxed className="py-8">
       <div className="mb-6">
+        <PageTitle>Import</PageTitle>
         <h1 className="text-3xl font-bold tracking-tight">Import</h1>
         <p className="mt-1 text-muted-foreground">
           Import flashcards from JSON or SQT (Simple Question Text) files

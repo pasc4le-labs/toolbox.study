@@ -12,6 +12,7 @@ import {
   RiImageLine,
   RiCodeLine,
 } from "@remixicon/react";
+import { PageTitle } from "@/components/page-title";
 import { Boxed } from "@/components/boxed";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -531,6 +532,7 @@ ${attachedFiles.length > 0 ? `${attachedFiles.length} file(s) are attached for y
   return (
     <Boxed className="py-8">
       <div className="mb-6">
+        <PageTitle>Generate</PageTitle>
         <h1 className="text-3xl font-bold tracking-tight">Generate Flashcards</h1>
         <p className="mt-1 text-muted-foreground">
           Use AI to create flashcards from your content

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { PageTitle } from "@/components/page-title";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
@@ -188,6 +189,7 @@ export default function OfferPage() {
       <div className="py-8">
         <div className="mx-auto max-w-2xl space-y-6">
           <div>
+            <PageTitle>Offer</PageTitle>
             <h1 className="text-xl font-bold">Offer Items</h1>
             <p className="text-sm text-muted-foreground">
               Select the items you want to share with a peer.

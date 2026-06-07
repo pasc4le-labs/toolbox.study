@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { RiAddLine, RiBookOpenLine, RiBarChartLine } from "@remixicon/react";
+import { PageTitle } from "@/components/page-title";
 import { Boxed } from "@/components/boxed";
 import { Button } from "@/components/ui/button";
 import {
@@ -38,7 +39,8 @@ export default function StudyDomePage() {
     <Boxed className="py-8">
       <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Study Dome</h1>
+          <PageTitle>Study Dome</PageTitle>
+      <h1 className="text-3xl font-bold tracking-tight">Study Dome</h1>
           <p className="mt-1 text-muted-foreground">
             Review flashcards, take exams, track your progress
           </p>

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, use } from "react";
 import { useRouter } from "next/navigation";
+import { PageTitle } from "@/components/page-title";
 import { Boxed } from "@/components/boxed";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -90,6 +91,7 @@ export default function EditBundlePage({ params }: { params: Promise<{ id: strin
 
   return (
     <Boxed className="py-8">
+      <PageTitle>Edit Bundle</PageTitle>
       <h1 className="mb-8 text-3xl font-bold tracking-tight">Edit Bundle</h1>
       <div className="max-w-md space-y-4">
         <div className="space-y-2">

@@ -7,6 +7,7 @@ import {
   RiHistoryLine,
   RiBarChartLine,
 } from "@remixicon/react";
+import { PageTitle } from "@/components/page-title";
 import { Boxed } from "@/components/boxed";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -127,9 +128,10 @@ export default function PastExamsPage({ params }: { params: Promise<{ id: string
       </div>
 
       <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">
-          {bundle.title} — Past Exams
-        </h1>
+      <PageTitle>Past Exams</PageTitle>
+      <h1 className="text-3xl font-bold tracking-tight">
+            {bundle.title} — Past Exams
+          </h1>
         <p className="mt-1 text-sm text-muted-foreground">
           {attempts.length} attempt{attempts.length !== 1 ? "s" : ""}
         </p>

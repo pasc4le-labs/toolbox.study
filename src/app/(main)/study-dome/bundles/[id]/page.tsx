@@ -15,6 +15,7 @@ import {
   RiBarChartLine,
   RiHistoryLine,
 } from "@remixicon/react";
+import { PageTitle } from "@/components/page-title";
 import { Boxed } from "@/components/boxed";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -220,7 +221,8 @@ export default function BundleDetailPage({ params }: { params: Promise<{ id: str
 
       <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">{bundle.title}</h1>
+          <PageTitle>Bundle Detail</PageTitle>
+      <h1 className="text-3xl font-bold tracking-tight">{bundle.title}</h1>
           {bundle.description && (
             <p className="mt-1 text-muted-foreground">{bundle.description}</p>
           )}

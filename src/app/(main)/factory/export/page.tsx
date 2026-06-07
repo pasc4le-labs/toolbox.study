@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import {
   RiDownloadLine,
 } from "@remixicon/react";
+import { PageTitle } from "@/components/page-title";
 import { Boxed } from "@/components/boxed";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -238,6 +239,7 @@ export default function ExportPage() {
   return (
     <Boxed className="py-8">
       <div className="mb-6">
+        <PageTitle>Export</PageTitle>
         <h1 className="text-3xl font-bold tracking-tight">Export</h1>
         <p className="mt-1 text-muted-foreground">
           Export your cards and bundles as JSON files

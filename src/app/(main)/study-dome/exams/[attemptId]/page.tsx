@@ -11,6 +11,7 @@ import {
   RiFlagLine,
 } from "@remixicon/react";
 import { Icon } from "@iconify/react";
+import { PageTitle } from "@/components/page-title";
 import { Boxed } from "@/components/boxed";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -339,6 +340,7 @@ export default function ExamAttemptPage({ params }: { params: Promise<{ attemptI
       <div className="flex-1">
         <Boxed className="py-8">
           <div className="mb-6">
+            <PageTitle>Exam</PageTitle>
             <h1 className="text-2xl font-bold">{exam.title}</h1>
             <div className="mt-2 flex items-center gap-4 text-sm text-muted-foreground">
               <span>Question {currentIdx + 1} of {questions.length}</span>

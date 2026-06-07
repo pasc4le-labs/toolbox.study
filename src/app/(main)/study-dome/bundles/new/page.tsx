@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { PageTitle } from "@/components/page-title";
 import { Boxed } from "@/components/boxed";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,6 +40,7 @@ export default function NewBundlePage() {
 
   return (
     <Boxed className="py-8">
+      <PageTitle>New Bundle</PageTitle>
       <h1 className="mb-8 text-3xl font-bold tracking-tight">Create Bundle</h1>
       <div className="max-w-md space-y-4">
         <div className="space-y-2">

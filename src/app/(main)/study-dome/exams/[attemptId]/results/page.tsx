@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, use } from "react";
 import Link from "next/link";
 import { RiCheckLine, RiCloseLine, RiArrowLeftLine, RiRefreshLine } from "@remixicon/react";
+import { PageTitle } from "@/components/page-title";
 import { Boxed } from "@/components/boxed";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -99,6 +100,7 @@ export default function ExamResultsPage({ params }: { params: Promise<{ attemptI
               <RiCloseLine className="h-10 w-10 text-red-500" />
             )}
           </div>
+          <PageTitle>Exam Results</PageTitle>
           <CardTitle className="text-3xl">{exam?.title ?? "Exam Results"}</CardTitle>
         </CardHeader>
         <CardContent>

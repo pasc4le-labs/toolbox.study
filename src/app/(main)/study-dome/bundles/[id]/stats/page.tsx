@@ -20,6 +20,7 @@ import {
   VisDonut,
 } from "@unovis/react";
 import { CurveType } from "@unovis/ts";
+import { PageTitle } from "@/components/page-title";
 import { Boxed } from "@/components/boxed";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -211,7 +212,8 @@ export default function BundleStatsPage({
         </div>
 
         <div className="mb-8">
-          <h1 className="text-3xl font-bold tracking-tight">
+          <PageTitle>Bundle Stats</PageTitle>
+      <h1 className="text-3xl font-bold tracking-tight">
             {bundle.title} — Statistics
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">

@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { RiAddLine, RiSearchLine, RiDeleteBinLine, RiEditLine } from "@remixicon/react";
+import { PageTitle } from "@/components/page-title";
 import { Boxed } from "@/components/boxed";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -74,6 +75,7 @@ export default function CardsPage() {
   return (
     <Boxed className="py-8">
       <div className="mb-6 flex items-center justify-between">
+        <PageTitle>Cards</PageTitle>
         <h1 className="text-3xl font-bold tracking-tight">Cards</h1>
         <Button asChild>
           <Link href="/study-dome/cards/new">

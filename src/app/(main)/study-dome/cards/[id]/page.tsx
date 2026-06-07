@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, use } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { RiEditLine, RiDeleteBinLine, RiArrowLeftLine } from "@remixicon/react";
+import { PageTitle } from "@/components/page-title";
 import { Boxed } from "@/components/boxed";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -96,14 +97,15 @@ export default function CardDetailPage({ params }: { params: Promise<{ id: strin
 
   return (
     <Boxed className="py-8">
-      <div className="mb-6">
-        <Button asChild variant="link" className="px-0">
-          <Link href="/study-dome/cards">
-            <RiArrowLeftLine className="mr-1 h-4 w-4" />
-            Back to Cards
-          </Link>
-        </Button>
-      </div>
+        <PageTitle>Card Detail</PageTitle>
+        <div className="mb-6">
+          <Button asChild variant="link" className="px-0">
+            <Link href="/study-dome/cards">
+              <RiArrowLeftLine className="mr-1 h-4 w-4" />
+              Back to Cards
+            </Link>
+          </Button>
+        </div>
 
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">

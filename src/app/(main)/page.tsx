@@ -1,6 +1,11 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { RiBookOpenLine, RiExchangeLine, RiMagicLine } from "@remixicon/react";
 import { Boxed } from "@/components/boxed";
+
+export const metadata: Metadata = {
+  title: "Home",
+};
 
 export default function Home() {
   return (

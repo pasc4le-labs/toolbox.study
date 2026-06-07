@@ -11,6 +11,7 @@ import {
   RiCheckboxMultipleLine,
   RiCloseLine,
 } from "@remixicon/react";
+import { PageTitle } from "@/components/page-title";
 import { Boxed } from "@/components/boxed";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -272,6 +273,7 @@ export default function TaggerPage() {
       <div className="mb-6">
         <div className="flex items-center gap-2">
           <RiPriceTag3Line className="h-6 w-6 text-primary" />
+          <PageTitle>Tagger</PageTitle>
           <h1 className="text-3xl font-bold tracking-tight">Auto-Tag Cards</h1>
         </div>
         <p className="mt-1 text-muted-foreground">
