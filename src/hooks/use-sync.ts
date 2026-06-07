@@ -35,7 +35,11 @@ export function useSync(): {
   const [status, setStatus] = useState<SyncStatus>("idle");
   const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState<{ current: number; total: number } | null>(null);
-  const [lastSyncedAt, setLastSyncedAt] = useState<number | null>(() => loadLastSyncedAt());
+  const [lastSyncedAt, setLastSyncedAt] = useState<number | null>(null);
+
+  useEffect(() => {
+    setLastSyncedAt(loadLastSyncedAt());
+  }, []);
 
   const chunksRef = useRef<string[]>([]);
   const totalChunksRef = useRef(0);

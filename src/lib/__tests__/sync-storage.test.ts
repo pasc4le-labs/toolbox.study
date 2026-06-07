@@ -2,6 +2,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 const store: Record<string, string> = {};
 
+vi.stubGlobal("window", {});
+
 vi.stubGlobal("localStorage", {
   getItem: vi.fn((key: string) => store[key] ?? null),
   setItem: vi.fn((key: string, value: string) => { store[key] = value; }),
