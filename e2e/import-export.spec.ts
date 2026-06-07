@@ -263,14 +263,14 @@ test("round-trip export and import preserves all card types", async ({ page }) =
   await fs.promises.rmdir(tmpDir);
 });
 
-test("SQT import creates multi_radio cards correctly", async ({ page }) => {
+test("UQF import creates multi_radio cards correctly", async ({ page }) => {
   await page.goto("/factory/import");
   await page.waitForLoadState("networkidle");
 
-  // Switch to SQT mode
-  await page.click("button:has-text('SQT Import')");
+  // Switch to UQF mode
+  await page.click("button:has-text('UQF Import')");
 
-  const sqtContent = `Esercizio 1.
+  const uqfContent = `Esercizio 1.
 What is the capital of Italy?
 A) Rome
 B) Paris
@@ -286,8 +286,8 @@ C) Jupiter
 Risposta: B
 `;
 
-  const tmpFile = path.join(os.tmpdir(), `test-${Date.now()}.sqt`);
-  await fs.promises.writeFile(tmpFile, sqtContent, "utf-8");
+  const tmpFile = path.join(os.tmpdir(), `test-${Date.now()}.txt`);
+  await fs.promises.writeFile(tmpFile, uqfContent, "utf-8");
 
   const fileInput = page.locator('input[type="file"][accept*=".txt"]').first();
   await fileInput.setInputFiles(tmpFile);
@@ -459,4 +459,137 @@ test("bundle export and import preserves card tags", async ({ page }) => {
 
   await fs.promises.unlink(downloadPath);
   await fs.promises.rmdir(tmpDir);
+});
+
+test("UQF import creates open question cards", async ({ page }) => {
+  await page.goto("/factory/import");
+  await page.waitForLoadState("networkidle");
+
+  await page.click("button:has-text('UQF Import')");
+
+  const uqfContent = `Q: Explain what TCP is in one sentence.
+
+Answer: TCP is a connection-oriented transport protocol that guarantees ordered delivery of bytes.
+
+Exp: Used by HTTP, SSH, and email.
+`;
+
+  const tmpFile = path.join(os.tmpdir(), `uqf-open-${Date.now()}.txt`);
+  await fs.promises.writeFile(tmpFile, uqfContent, "utf-8");
+
+  const fileInput = page.locator('input[type="file"][accept*=".txt"]').first();
+  await fileInput.setInputFiles(tmpFile);
+
+  await expect(page.getByText("Parsed 1 questions")).toBeVisible();
+  // Verify "Open" badge is shown in preview
+  await expect(page.getByText("Open", { exact: true }).first()).toBeVisible();
+  await page.getByRole("button", { name: /Import \d+ Cards/ }).click();
+
+  await expect(page.getByRole("heading", { name: /Parsed Questions \(\d+\)/ })).not.toBeVisible();
+
+  await page.goto("/study-dome/cards");
+  await page.waitForLoadState("networkidle");
+
+  await expect(page.getByText("Explain what TCP is in one sentence.")).toBeVisible();
+
+  // Open the card detail page and verify it's an open card
+  await page.click("text=Explain what TCP is in one sentence.");
+  await page.waitForURL(/\/study-dome\/cards\/\d+/);
+  await expect(page.getByText("open")).toBeVisible();
+  // Open cards have no Options section
+  await expect(page.locator('[data-slot="card-title"]', { hasText: "Options" })).toHaveCount(0);
+
+  await fs.promises.unlink(tmpFile);
+});
+
+test("UQF import creates multi_select cards", async ({ page }) => {
+  await page.goto("/factory/import");
+  await page.waitForLoadState("networkidle");
+
+  await page.click("button:has-text('UQF Import')");
+
+  const uqfContent = `Q: Which of the following are prime numbers?
+A) 2
+B) 4
+C) 5
+D) 9
+Answers: A, C
+`;
+
+  const tmpFile = path.join(os.tmpdir(), `uqf-multiselect-${Date.now()}.txt`);
+  await fs.promises.writeFile(tmpFile, uqfContent, "utf-8");
+
+  const fileInput = page.locator('input[type="file"][accept*=".txt"]').first();
+  await fileInput.setInputFiles(tmpFile);
+
+  await expect(page.getByText("Parsed 1 questions")).toBeVisible();
+  await expect(page.getByText("Multi-Select", { exact: true }).first()).toBeVisible();
+  await page.getByRole("button", { name: /Import \d+ Cards/ }).click();
+
+  await expect(page.getByRole("heading", { name: /Parsed Questions \(\d+\)/ })).not.toBeVisible();
+
+  await page.goto("/study-dome/cards");
+  await page.waitForLoadState("networkidle");
+
+  await expect(page.getByText("Which of the following are prime numbers?")).toBeVisible();
+
+  // Open the card and verify both correct options are marked
+  await page.click("text=Which of the following are prime numbers?");
+  await page.waitForURL(/\/study-dome\/cards\/\d+/);
+  await expect(page.getByText("multi select")).toBeVisible();
+  await expect(page.locator('[data-slot="card-title"]', { hasText: "Options" })).toBeVisible();
+  // Two correct options → two "Correct" badges
+  await expect(page.getByText("Correct")).toHaveCount(2);
+
+  await fs.promises.unlink(tmpFile);
+});
+
+test("UQF import handles multi-line content with LaTeX and Markdown", async ({ page }) => {
+  await page.goto("/factory/import");
+  await page.waitForLoadState("networkidle");
+
+  await page.click("button:has-text('UQF Import')");
+
+  const uqfContent = `Question: Derive the **quadratic formula** step by step.
+
+Answer:
+The quadratic formula is:
+
+$$x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$$
+
+This applies to equations of the form $ax^2 + bx + c = 0$.
+
+Explanation: Derived by *completing the square*:
+
+\`\`\`
+(x + b/2a)^2 = (b^2 - 4ac) / 4a^2
+\`\`\`
+`;
+
+  const tmpFile = path.join(os.tmpdir(), `uqf-multiline-${Date.now()}.txt`);
+  await fs.promises.writeFile(tmpFile, uqfContent, "utf-8");
+
+  const fileInput = page.locator('input[type="file"][accept*=".txt"]').first();
+  await fileInput.setInputFiles(tmpFile);
+
+  await expect(page.getByText("Parsed 1 questions")).toBeVisible();
+  await page.getByRole("button", { name: /Import \d+ Cards/ }).click();
+
+  await expect(page.getByRole("heading", { name: /Parsed Questions \(\d+\)/ })).not.toBeVisible();
+
+  await page.goto("/study-dome/cards");
+  await page.waitForLoadState("networkidle");
+
+  // Card front preserves Markdown/LaTeX verbatim
+  await expect(page.getByText(/Derive the \*\*quadratic formula\*\*/)).toBeVisible();
+
+  // Open the card and verify multi-line content is preserved
+  await page.getByText(/Derive the \*\*quadratic formula\*\*/).click();
+  await page.waitForURL(/\/study-dome\/cards\/\d+/);
+  await expect(page.getByText(/quadratic formula is:/)).toBeVisible();
+  // Verify LaTeX formula is preserved verbatim
+  await expect(page.getByText("$$x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$$")).toBeVisible();
+  await expect(page.getByText(/Derived by \*completing the square\*/)).toBeVisible();
+
+  await fs.promises.unlink(tmpFile);
 });

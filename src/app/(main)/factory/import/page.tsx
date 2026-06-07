@@ -7,6 +7,8 @@ import {
   RiCheckLine,
   RiArrowDownLine,
   RiDownloadLine,
+  RiDiamondLine,
+  RiExternalLinkLine,
 } from "@remixicon/react";
 import { PageTitle } from "@/components/page-title";
 import { Boxed } from "@/components/boxed";
@@ -30,10 +32,16 @@ import {
   getOrCreateTag,
   addCardsToBundle,
 } from "@/lib/services";
-import { parseSqt, type SqtCard } from "@/lib/sqt-parser";
+import { parseUqf, type UqfCard } from "@/lib/uqf-parser";
 import { toast } from "sonner";
 
-type ImportMode = "json" | "sqt";
+type ImportMode = "json" | "uqf";
+
+const CARD_TYPE_LABELS: Record<UqfCard["type"], string> = {
+  open: "Open",
+  multi_radio: "Multiple Choice",
+  multi_select: "Multi-Select",
+};
 
 function parseJsonField<T>(val: string | T | null | undefined): T | null {
   if (val == null) return null;
@@ -77,10 +85,11 @@ export default function ImportPage() {
   const [jsonTargetBundleId, setJsonTargetBundleId] = useState<string>("none");
   const [jsonParseError, setJsonParseError] = useState<string | null>(null);
 
-  // SQT import state
-  const [sqtCards, setSqtCards] = useState<SqtCard[]>([]);
-  const [sqtErrors, setSqtErrors] = useState<string[]>([]);
-  const [sqtTargetBundleId, setSqtTargetBundleId] = useState<string>("none");
+  // UQF import state
+  const [uqfCards, setUqfCards] = useState<UqfCard[]>([]);
+  const [uqfErrors, setUqfErrors] = useState<string[]>([]);
+  const [uqfWarnings, setUqfWarnings] = useState<string[]>([]);
+  const [uqfTargetBundleId, setUqfTargetBundleId] = useState<string>("none");
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -109,10 +118,11 @@ export default function ImportPage() {
     setJsonTargetBundleId("none");
   };
 
-  const resetSqtState = () => {
-    setSqtCards([]);
-    setSqtErrors([]);
-    setSqtTargetBundleId("none");
+  const resetUqfState = () => {
+    setUqfCards([]);
+    setUqfErrors([]);
+    setUqfWarnings([]);
+    setUqfTargetBundleId("none");
   };
 
   // ─── JSON Import ───
@@ -239,22 +249,23 @@ export default function ImportPage() {
     }
   };
 
-  // ─── SQT Import ───
+  // ─── UQF Import ───
 
-  const handleSqtFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleUqfFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     const reader = new FileReader();
     reader.onload = (ev) => {
       const text = ev.target?.result as string;
-      const { cards, errors } = parseSqt(text);
-      resetSqtState();
-      setSqtCards(cards);
-      setSqtErrors(errors);
+      const { cards, errors, warnings } = parseUqf(text);
+      resetUqfState();
+      setUqfCards(cards);
+      setUqfErrors(errors);
+      setUqfWarnings(warnings);
 
       if (cards.length === 0) {
-        toast.error("No valid questions found in the SQT file");
+        toast.error("No valid questions found in the UQF file");
       } else {
         toast.success(`Parsed ${cards.length} questions`);
         if (errors.length > 0) {
@@ -266,20 +277,20 @@ export default function ImportPage() {
     e.target.value = "";
   };
 
-  const handleSqtImport = async () => {
-    if (sqtCards.length === 0) {
+  const handleUqfImport = async () => {
+    if (uqfCards.length === 0) {
       toast.error("No cards to import");
       return;
     }
     setSaving(true);
     try {
       const { db } = await getDb();
-      const bundleId = sqtTargetBundleId !== "none" ? parseInt(sqtTargetBundleId) : null;
+      const bundleId = uqfTargetBundleId !== "none" ? parseInt(uqfTargetBundleId) : null;
       let count = 0;
 
-      for (const cardData of sqtCards) {
-        const card = await createCard(db, {
-          type: "multi_radio",
+      for (const cardData of uqfCards) {
+        await createCard(db, {
+          type: cardData.type,
           front: cardData.front,
           back: cardData.back,
           explanation: cardData.explanation,
@@ -292,7 +303,7 @@ export default function ImportPage() {
       }
 
       toast.success(`Imported ${count} cards`);
-      resetSqtState();
+      resetUqfState();
       await loadRef.current?.();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Import failed");
@@ -319,7 +330,7 @@ export default function ImportPage() {
         <PageTitle>Import</PageTitle>
         <h1 className="text-3xl font-bold tracking-tight">Import</h1>
         <p className="mt-1 text-muted-foreground">
-          Import flashcards from JSON or SQT (Simple Question Text) files
+          Import flashcards from JSON or UQF (Universal Quiz Format) text files
         </p>
       </div>
 
@@ -327,17 +338,17 @@ export default function ImportPage() {
       <div className="mb-6 flex gap-2">
         <Button
           variant={mode === "json" ? "default" : "outline"}
-          onClick={() => { setMode("json"); resetJsonState(); resetSqtState(); }}
+          onClick={() => { setMode("json"); resetJsonState(); resetUqfState(); }}
         >
           <RiFileLine className="mr-2 h-4 w-4" />
           JSON Import
         </Button>
         <Button
-          variant={mode === "sqt" ? "default" : "outline"}
-          onClick={() => { setMode("sqt"); resetJsonState(); resetSqtState(); }}
+          variant={mode === "uqf" ? "default" : "outline"}
+          onClick={() => { setMode("uqf"); resetJsonState(); resetUqfState(); }}
         >
           <RiArrowDownLine className="mr-2 h-4 w-4" />
-          SQT Import
+          UQF Import
         </Button>
       </div>
 
@@ -359,6 +370,18 @@ export default function ImportPage() {
                 <RiUploadLine className="mr-2 h-4 w-4" />
                 Choose JSON File
               </Button>
+              {process.env.NEXT_PUBLIC_GEMINI_JSON_GEM && (
+                <Button asChild variant="ghost">
+                  <a
+                    href={process.env.NEXT_PUBLIC_GEMINI_JSON_GEM}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <RiDiamondLine className="mr-2 h-4 w-4" />
+                    Gemini Gem
+                  </a>
+                </Button>
+              )}
               <Button
                 variant="ghost"
                 onClick={() => {
@@ -472,13 +495,15 @@ export default function ImportPage() {
         </div>
       )}
 
-      {mode === "sqt" && (
+      {mode === "uqf" && (
         <div className="space-y-6">
-          {/* SQT file upload */}
+          {/* UQF file upload */}
           <div className="space-y-2">
-            <Label>SQT File (Simple Question Text)</Label>
+            <Label>UQF File (Universal Quiz Format)</Label>
             <p className="text-sm text-muted-foreground">
-              Upload a plain-text file where each exercise follows the SQT format:
+              Upload a plain-text or Markdown file with questions in the UQF format.
+              UQF is a strict superset of the legacy SQT format — legacy SQT files
+              are still imported correctly as <code className="bg-muted px-1 rounded">multi_radio</code> cards.
             </p>
             <pre className="mt-2 rounded-lg border bg-muted/50 p-3 text-xs leading-relaxed">{`Esercizio 1.
 Question text goes here
@@ -488,34 +513,57 @@ C) Third option
 Risposta: A
 Commento: Optional explanation`}</pre>
             <ul className="mt-3 ml-4 list-disc text-sm text-muted-foreground">
-              <li>Each exercise starts with <code className="bg-muted px-1 rounded">Esercizio N.</code> on its own line</li>
-              <li>Followed by the question text (can span multiple lines)</li>
-              <li>Options are lettered <code className="bg-muted px-1 rounded">A)</code> through <code className="bg-muted px-1 rounded">D)</code> (or more), one per line</li>
-              <li><code className="bg-muted px-1 rounded">Risposta:</code> gives the correct letter (e.g. <code className="bg-muted px-1 rounded">Risposta: A</code>)</li>
-              <li><code className="bg-muted px-1 rounded">Commento:</code> is optional and adds an explanation to the card</li>
-              <li>All cards are imported as <strong>multi_radio</strong> (single-answer multiple choice)</li>
+              <li><strong>Legacy SQT:</strong> <code className="bg-muted px-1 rounded">Esercizio N.</code> + <code className="bg-muted px-1 rounded">Risposta:</code> + <code className="bg-muted px-1 rounded">Commento:</code></li>
+              <li><strong>Modern UQF:</strong> <code className="bg-muted px-1 rounded">Question:</code> / <code className="bg-muted px-1 rounded">Q:</code> for the question, <code className="bg-muted px-1 rounded">Answer:</code> / <code className="bg-muted px-1 rounded">Answers:</code> for the answer, <code className="bg-muted px-1 rounded">Explanation:</code> / <code className="bg-muted px-1 rounded">Exp:</code> for the explanation</li>
+              <li>Options are lettered <code className="bg-muted px-1 rounded">A)</code> through <code className="bg-muted px-1 rounded">D)</code> (or more)</li>
+              <li>Single answer (e.g. <code className="bg-muted px-1 rounded">Answer: A</code>) → <strong>multi_radio</strong></li>
+              <li>Multi-answer (e.g. <code className="bg-muted px-1 rounded">Answers: A, C</code>) → <strong>multi_select</strong></li>
+              <li>No options between Question and Answer → <strong>open</strong> question (Answer is the full text)</li>
+              <li>Use <code className="bg-muted px-1 rounded">---</code> on its own line to separate cards</li>
+              <li>LLM-tolerant: <code className="bg-muted px-1 rounded">- A)</code>, <code className="bg-muted px-1 rounded">* B)</code>, <code className="bg-muted px-1 rounded">**A.**</code> all parse as the same option</li>
+              <li>Multi-line questions, LaTeX (<code className="bg-muted px-1 rounded">$x^2$</code>), and Markdown are preserved verbatim</li>
             </ul>
-            <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
-              <RiUploadLine className="mr-2 h-4 w-4" />
-              Choose SQT File
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
+                <RiUploadLine className="mr-2 h-4 w-4" />
+                Choose UQF File
+              </Button>
+              {process.env.NEXT_PUBLIC_GEMINI_UQF_GEM && (
+                <Button asChild variant="ghost">
+                  <a
+                    href={process.env.NEXT_PUBLIC_GEMINI_UQF_GEM}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <RiDiamondLine className="mr-2 h-4 w-4" />
+                    Gemini Gem
+                  </a>
+                </Button>
+              )}
+              <Button asChild variant="ghost">
+                <a href="/uqf-skill.md" target="_blank" rel="noopener noreferrer">
+                  <RiExternalLinkLine className="mr-2 h-4 w-4" />
+                  LLM Instructions
+                </a>
+              </Button>
+            </div>
             <input
               ref={fileInputRef}
               type="file"
-              accept=".txt,text/plain"
+              accept=".txt,.md,text/plain,text/markdown"
               className="hidden"
-              onChange={handleSqtFile}
+              onChange={handleUqfFile}
             />
           </div>
 
-          {sqtErrors.length > 0 && (
+          {uqfErrors.length > 0 && (
             <Card className="border-yellow-500">
               <CardContent className="py-4">
                 <h4 className="mb-2 text-sm font-semibold text-yellow-600">
-                  Parsing Warnings ({sqtErrors.length})
+                  Parsing Warnings ({uqfErrors.length})
                 </h4>
                 <div className="max-h-32 overflow-y-auto text-sm text-muted-foreground">
-                  {sqtErrors.map((err, i) => (
+                  {uqfErrors.map((err, i) => (
                     <p key={i}>{err}</p>
                   ))}
                 </div>
@@ -523,12 +571,27 @@ Commento: Optional explanation`}</pre>
             </Card>
           )}
 
-          {/* Parsed SQT preview */}
-          {sqtCards.length > 0 && (
+          {uqfWarnings.length > 0 && (
+            <Card className="border-blue-500">
+              <CardContent className="py-4">
+                <h4 className="mb-2 text-sm font-semibold text-blue-600">
+                  Notes ({uqfWarnings.length})
+                </h4>
+                <div className="max-h-32 overflow-y-auto text-sm text-muted-foreground">
+                  {uqfWarnings.map((w, i) => (
+                    <p key={i}>{w}</p>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Parsed UQF preview */}
+          {uqfCards.length > 0 && (
             <>
               <div className="space-y-2">
                 <Label>Target Bundle</Label>
-                <Select value={sqtTargetBundleId} onValueChange={setSqtTargetBundleId}>
+                <Select value={uqfTargetBundleId} onValueChange={setUqfTargetBundleId}>
                   <SelectTrigger>
                     <SelectValue placeholder="None (no bundle)" />
                   </SelectTrigger>
@@ -545,39 +608,47 @@ Commento: Optional explanation`}</pre>
 
               <div className="space-y-2">
                 <h3 className="text-lg font-semibold">
-                  Parsed Questions ({sqtCards.length})
+                  Parsed Questions ({uqfCards.length})
                 </h3>
                 <div className="max-h-96 space-y-2 overflow-y-auto">
-                  {sqtCards.map((card, i) => (
+                  {uqfCards.map((card, i) => (
                     <Card key={i} className="transition-shadow hover:shadow-md">
                       <CardContent className="py-3">
                         <div className="mb-1 flex items-center gap-2">
                           <Badge variant="secondary">{i + 1}</Badge>
-                          <Badge>multi_radio</Badge>
+                          <Badge>{CARD_TYPE_LABELS[card.type]}</Badge>
                         </div>
-                        <p className="mb-1 text-sm font-medium">{card.front}</p>
-                        {card.options && (
+                        <p className="mb-1 whitespace-pre-wrap text-sm font-medium">{card.front}</p>
+                        {card.options && card.options.length > 0 && (
                           <div className="space-y-1">
-                            {card.options.map((opt, j) => (
-                              <div
-                                key={j}
-                                className={`rounded border p-1 text-xs ${
-                                  card.correctIndices.includes(j)
-                                    ? "border-green-500 bg-green-50 dark:bg-green-950/20"
-                                    : ""
-                                }`}
-                              >
-                                <span className="mr-1 font-bold">{String.fromCharCode(65 + j)})</span>
-                                {opt}
-                                {card.correctIndices.includes(j) && (
-                                  <Badge className="ml-1 bg-green-600 text-xs">✓</Badge>
-                                )}
-                              </div>
-                            ))}
+                            {card.options.map((opt, j) => {
+                              const isCorrect = card.correctIndices?.includes(j) ?? false;
+                              return (
+                                <div
+                                  key={j}
+                                  className={`rounded border p-1 text-xs ${
+                                    isCorrect
+                                      ? "border-green-500 bg-green-50 dark:bg-green-950/20"
+                                      : ""
+                                  }`}
+                                >
+                                  <span className="mr-1 font-bold">{String.fromCharCode(65 + j)})</span>
+                                  <span className="whitespace-pre-wrap">{opt}</span>
+                                  {isCorrect && (
+                                    <Badge className="ml-1 bg-green-600 text-xs">✓</Badge>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                        {card.type === "open" && card.back && (
+                          <div className="mt-1 rounded border bg-muted/30 p-2 text-xs whitespace-pre-wrap">
+                            <span className="font-semibold">Answer:</span> {card.back}
                           </div>
                         )}
                         {card.explanation && (
-                          <p className="mt-1 text-xs text-muted-foreground">
+                          <p className="mt-1 text-xs whitespace-pre-wrap text-muted-foreground">
                             {card.explanation}
                           </p>
                         )}
@@ -587,9 +658,9 @@ Commento: Optional explanation`}</pre>
                 </div>
               </div>
 
-              <Button onClick={handleSqtImport} disabled={saving} size="lg">
+              <Button onClick={handleUqfImport} disabled={saving} size="lg">
                 <RiCheckLine className="mr-2 h-4 w-4" />
-                {saving ? "Importing..." : `Import ${sqtCards.length} Cards`}
+                {saving ? "Importing..." : `Import ${uqfCards.length} Cards`}
               </Button>
             </>
           )}
