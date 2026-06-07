@@ -23,6 +23,23 @@ export default defineConfig({
           ],
         },
       },
+      testIgnore: ["**/responsive-layouts.spec.ts"],
+    },
+    {
+      name: "mobile-chrome",
+      use: { ...devices["Pixel 7"] },
+      testMatch: [
+        "**/responsive-nav.spec.ts",
+        "**/responsive-layouts.spec.ts",
+      ],
+    },
+    {
+      name: "mobile-safari",
+      use: { ...devices["iPhone 14"] },
+      testMatch: [
+        "**/responsive-nav.spec.ts",
+        "**/responsive-layouts.spec.ts",
+      ],
     },
   ],
   webServer: {

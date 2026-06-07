@@ -347,8 +347,8 @@ export default function ExamAttemptPage({ params }: { params: Promise<{ attemptI
           </div>
 
           {current && (
-            <div className="flex gap-3">
-              <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-3 md:flex-row">
+              <div className="-mx-1 flex flex-row gap-2 overflow-x-auto px-1 md:mx-0 md:flex-col md:overflow-visible md:px-0">
                 <Button
                   variant="outline"
                   size="icon"
@@ -395,7 +395,7 @@ export default function ExamAttemptPage({ params }: { params: Promise<{ attemptI
                   <Icon icon="lucide:copy" className="size-4" />
                 </Button>
               </div>
-              <Card className="flex-1">
+              <Card className="min-w-0 flex-1">
                 <CardContent className="py-4">
                   <div className="mb-4">
                     <Badge variant="secondary">
@@ -459,14 +459,14 @@ export default function ExamAttemptPage({ params }: { params: Promise<{ attemptI
                 size="icon"
                 aria-label={flagged.has(current.cardId) ? "Unflag question" : "Flag question"}
                 onClick={() => toggleFlag(current.cardId)}
-                className={`shrink-0 ${flagged.has(current.cardId) ? "border-red-500 bg-red-500 text-white hover:bg-red-600" : ""}`}
+                className={`shrink-0 self-start ${flagged.has(current.cardId) ? "border-red-500 bg-red-500 text-white hover:bg-red-600" : ""}`}
               >
                 <RiFlagLine className="h-4 w-4" />
               </Button>
             </div>
           )}
 
-          <div className="mt-6 flex justify-between">
+          <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-between">
             <Button
               variant="outline"
               disabled={currentIdx === 0}

@@ -704,7 +704,7 @@ ${attachedFiles.length > 0 ? `${attachedFiles.length} file(s) are attached for y
           {/* Streaming / Generated cards preview */}
           {(generatedCards.length > 0 || generating) && (
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-center gap-3">
                   <h2 className="text-xl font-semibold">
                     {generating
@@ -715,7 +715,7 @@ ${attachedFiles.length > 0 ? `${attachedFiles.length} file(s) are attached for y
                     <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
                   )}
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <Button
                     variant="ghost"
                     size="sm"
@@ -726,11 +726,12 @@ ${attachedFiles.length > 0 ? `${attachedFiles.length} file(s) are attached for y
                   </Button>
                   {!generating && (
                     <>
-                      <Button onClick={handleSaveAll} disabled={saving}>
+                      <Button onClick={handleSaveAll} disabled={saving} size="sm">
                         {saving ? "Saving..." : "Save All"}
                       </Button>
                       <Button
                         variant="outline"
+                        size="sm"
                         onClick={() => setGeneratedCards([])}
                       >
                         Discard

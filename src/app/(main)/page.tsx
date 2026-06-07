@@ -8,13 +8,13 @@ export default function Home() {
       {/* Hero section */}
       <div className="relative mb-12 md:mb-16">
         <div className="relative space-y-3">
-          <h1 className="font-heading text-3xl font-bold tracking-tight text-foreground md:text-4xl">
+          <h1 className="text-balance font-heading text-3xl font-bold tracking-tight text-foreground md:text-4xl">
             Welcome to{" "}
             <span className="bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
               StudyToolbox
             </span>
           </h1>
-          <p className="max-w-2xl text-sm text-muted-foreground md:text-base">
+          <p className="max-w-2xl text-pretty text-sm text-muted-foreground md:text-base">
             Your local-first study companion. Review flashcards, take exams,
             generate cards with AI — all stored securely in your browser.
           </p>

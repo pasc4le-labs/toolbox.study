@@ -56,7 +56,7 @@ export default function BundlesPage() {
 
   return (
     <Boxed className="py-8">
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-3xl font-bold tracking-tight">Bundles</h1>
         <Button asChild>
           <Link href="/study-dome/bundles/new">
@@ -96,14 +96,14 @@ export default function BundlesPage() {
                   )}
                 </CardHeader>
               </Link>
-              <CardContent className="flex gap-2 pt-0">
-                <Button variant="outline" size="sm" asChild>
+              <CardContent className="flex flex-wrap gap-2 pt-0">
+                <Button variant="outline" asChild>
                   <Link href={`/study-dome/bundles/${bundle.id}/edit`}>
                     <RiEditLine className="mr-1 h-4 w-4" />
                     Edit
                   </Link>
                 </Button>
-                <Button variant="outline" size="sm" onClick={() => setDeleteId(bundle.id)}>
+                <Button variant="outline" onClick={() => setDeleteId(bundle.id)}>
                   <RiDeleteBinLine className="mr-1 h-4 w-4" />
                   Delete
                 </Button>

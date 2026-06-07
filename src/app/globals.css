@@ -133,3 +133,13 @@
 }
 
 /* Safe area insets are applied via Tailwind arbitrary values in components */
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}

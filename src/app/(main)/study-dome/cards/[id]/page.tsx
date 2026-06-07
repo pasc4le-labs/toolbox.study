@@ -105,18 +105,18 @@ export default function CardDetailPage({ params }: { params: Promise<{ id: strin
         </Button>
       </div>
 
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
           <Badge>{card.type.replace("_", " ")}</Badge>
         </div>
-        <div className="flex gap-2">
-          <Button asChild variant="outline" size="sm">
+        <div className="flex flex-wrap gap-2">
+          <Button asChild variant="outline">
             <Link href={`/study-dome/cards/${card.id}/edit`}>
               <RiEditLine className="mr-1 h-4 w-4" />
               Edit
             </Link>
           </Button>
-          <Button variant="outline" size="sm" onClick={() => setDeleteOpen(true)}>
+          <Button variant="outline" onClick={() => setDeleteOpen(true)}>
             <RiDeleteBinLine className="mr-1 h-4 w-4" />
             Delete
           </Button>

@@ -353,7 +353,7 @@ export default function ExportPage() {
                     />
                     <Badge variant="secondary">{card.type.replace("_", " ")}</Badge>
                     <span className="flex-1 truncate text-sm">{card.front}</span>
-                    <span className="max-w-[200px] truncate text-xs text-muted-foreground">
+                    <span className="hidden max-w-[200px] truncate text-xs text-muted-foreground sm:inline">
                       {card.back}
                     </span>
                   </CardContent>

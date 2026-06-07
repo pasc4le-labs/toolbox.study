@@ -200,7 +200,7 @@ export default function OfferPage() {
             selected={selected}
             onChange={setSelected}
           />
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <span className="text-sm text-muted-foreground">
               {selected.size} item(s) selected
             </span>

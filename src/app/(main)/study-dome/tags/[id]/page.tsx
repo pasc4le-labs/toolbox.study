@@ -51,7 +51,7 @@ export default function TagDetailPage({ params }: { params: Promise<{ id: string
         </Button>
       </div>
 
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">{tagName || `Tag #${tagId}`}</h1>
           <p className="mt-1 text-muted-foreground">

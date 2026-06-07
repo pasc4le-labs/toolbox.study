@@ -19,13 +19,13 @@ export function FactoryNav() {
   return (
     <div className="border-b">
       <Boxed>
-        <nav className="flex gap-6">
+        <nav className="no-scrollbar -mx-1 flex gap-6 overflow-x-auto px-1">
           {tabs.map((tab) => (
             <Link
               key={tab.href}
               href={tab.href}
               className={cn(
-                "inline-flex items-center border-b-2 px-1 py-3 text-sm font-medium transition-colors",
+                "inline-flex shrink-0 items-center whitespace-nowrap border-b-2 px-1 py-3 text-sm font-medium transition-colors",
                 pathname === tab.href || (tab.href !== "/factory" && pathname.startsWith(tab.href))
                   ? "border-primary text-foreground"
                   : "border-transparent text-muted-foreground hover:text-foreground",

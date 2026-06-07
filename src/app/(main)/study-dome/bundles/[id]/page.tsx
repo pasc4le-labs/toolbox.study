@@ -218,7 +218,7 @@ export default function BundleDetailPage({ params }: { params: Promise<{ id: str
         </Button>
       </div>
 
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">{bundle.title}</h1>
           {bundle.description && (
@@ -228,7 +228,7 @@ export default function BundleDetailPage({ params }: { params: Promise<{ id: str
             {cards.length} card{cards.length !== 1 ? "s" : ""}
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Dialog open={examDialogOpen} onOpenChange={(open) => {
             setExamDialogOpen(open);
             if (open && bundle) {
@@ -373,19 +373,19 @@ export default function BundleDetailPage({ params }: { params: Promise<{ id: str
             </DialogContent>
           </Dialog>
 
-          <Button variant="outline" onClick={openAddDialog}>
-            <RiAddLine className="mr-2 h-4 w-4" />
+          <Button variant="outline" size="sm" onClick={openAddDialog}>
+            <RiAddLine className="mr-1 h-4 w-4" />
             Add Cards
           </Button>
-          <Button variant="ghost" asChild>
+          <Button variant="ghost" size="sm" asChild>
             <Link href={`/study-dome/bundles/${bundleId}/stats`}>
-              <RiBarChartLine className="mr-2 h-4 w-4" />
+              <RiBarChartLine className="mr-1 h-4 w-4" />
               Statistics
             </Link>
           </Button>
-          <Button variant="ghost" asChild>
+          <Button variant="ghost" size="sm" asChild>
             <Link href={`/study-dome/bundles/${bundleId}/past-exams`}>
-              <RiHistoryLine className="mr-2 h-4 w-4" />
+              <RiHistoryLine className="mr-1 h-4 w-4" />
               Past Exams
             </Link>
           </Button>

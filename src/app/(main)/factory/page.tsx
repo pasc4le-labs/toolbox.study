@@ -230,14 +230,14 @@ export default function FactoryPage() {
 
   return (
     <Boxed className="py-8">
-      <div className="mb-8 flex items-center justify-between">
+      <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Factory</h1>
           <p className="mt-1 text-muted-foreground">
             Configure AI providers, generate, import and export flashcards
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Button asChild variant="outline">
             <Link href="/factory/generate">
               <RiMagicLine className="mr-2 h-4 w-4" />

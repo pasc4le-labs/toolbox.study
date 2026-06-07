@@ -318,7 +318,7 @@ function ReviewContent() {
               {/* Rating buttons */}
               <div className="pt-4">
                 <h3 className="mb-3 text-sm font-medium">How well did you know this?</h3>
-                <div className="grid grid-cols-4 gap-2">
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                   <Button
                     variant="outline"
                     className="flex-col gap-1 py-4"

@@ -2,8 +2,9 @@ import type { Metadata, Viewport } from "next";
 import { Inter, Raleway } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
-import { Toaster } from "sonner";
+import { Toaster } from "@/components/ui/sonner";
 import { DbReset } from "@/components/db-reset";
+import { ThemeProvider } from "@/components/theme-provider";
 
 const ralewayHeading = Raleway({ subsets: ["latin"], variable: "--font-heading" });
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
@@ -27,12 +28,15 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      suppressHydrationWarning
       className={cn("h-full antialiased font-sans", inter.variable, ralewayHeading.variable)}
     >
       <body className="min-h-screen">
-        {children}
-        <Toaster richColors closeButton />
-        <DbReset />
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+          {children}
+          <Toaster richColors closeButton />
+          <DbReset />
+        </ThemeProvider>
       </body>
     </html>
   );

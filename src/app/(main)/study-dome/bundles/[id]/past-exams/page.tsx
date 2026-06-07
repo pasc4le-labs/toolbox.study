@@ -166,12 +166,12 @@ export default function PastExamsPage({ params }: { params: Promise<{ id: string
             </Card>
           ) : (
             <>
-              <div className="mb-4 flex items-center justify-between">
+              <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <p className="text-sm text-muted-foreground">
                   {completedCount} completed · {unfinishedCount} unfinished
                 </p>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="w-[140px]">
+                  <SelectTrigger className="w-full sm:w-[160px]">
                     <SelectValue placeholder="Filter status" />
                   </SelectTrigger>
                   <SelectContent>
@@ -183,7 +183,8 @@ export default function PastExamsPage({ params }: { params: Promise<{ id: string
               </div>
 
               <Card>
-                <Table>
+                <div className="overflow-x-auto">
+                <Table className="min-w-[600px]">
                   <TableHeader>
                     <TableRow>
                       <TableHead className="w-12">#</TableHead>
@@ -259,6 +260,7 @@ export default function PastExamsPage({ params }: { params: Promise<{ id: string
                     })}
                   </TableBody>
                 </Table>
+                </div>
               </Card>
             </>
           )}

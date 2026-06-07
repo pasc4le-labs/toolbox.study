@@ -166,6 +166,7 @@ StudyToolbox is built with a **local-first, mobile-first approach**:
 - **Sticky footer**: Footer always stays at the bottom using flexbox (`flex-1` on main content)
 - **Responsive**: Optimized for mobile (375px), tablet (768px), and desktop (1024px+)
 - **Touch-friendly**: All interactive elements meet 48px tap targets
+- **Dark mode**: System-aware light/dark theme powered by [`next-themes`](https://github.com/pacocoursey/next-themes). Switch from the sun/moon toggle in the navbar (or inside the mobile menu) between Light, Dark, and System. Theme is persisted to `localStorage` and applied as a `class` on `<html>` so it paints correctly before hydration.
 
 ### Spacing Grid
 
@@ -193,6 +194,7 @@ See [`docs/relay-deployment.md`](docs/relay-deployment.md) for Docker and produc
 - [`docs/architecture.md`](docs/architecture.md) — System architecture and data flow
 - [`docs/exchange-center.md`](docs/exchange-center.md) — How to use the Exchange Center
 - [`docs/relay-deployment.md`](docs/relay-deployment.md) — Relay deployment guide
+- [`docs/responsive.md`](docs/responsive.md) — Responsive design conventions, dark mode, and E2E coverage
 - [`docs/testing.md`](docs/testing.md) — Running and writing tests (unit, integration, E2E)
 
 ## Testing

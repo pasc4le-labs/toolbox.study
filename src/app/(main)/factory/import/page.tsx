@@ -446,7 +446,7 @@ export default function ImportPage() {
                   {jsonBundles.map((bundle, i) => (
                     <Card key={i}>
                       <CardContent className="py-3">
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
                           <Badge>{bundle.cards.length} cards</Badge>
                           <span className="font-medium">{bundle.title}</span>
                           {bundle.description && (

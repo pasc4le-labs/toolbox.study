@@ -114,8 +114,9 @@ test("bundle stats page shows charts and weak cards", async ({ page }) => {
   // Weak Cards section heading visible
   await expect(page.getByText("Weak Cards").first()).toBeVisible();
 
-  // SVG charts should be rendered by Unovis
-  await expect(page.locator("svg").first()).toBeVisible({ timeout: 5000 });
+  // SVG charts should be rendered by Unovis (scope to <main> so the navbar's
+  // <Logo> SVG isn't matched first).
+  await expect(page.locator("main svg").first()).toBeVisible({ timeout: 5000 });
 
   // Weak cards section should show the incorrectly answered card
   await expect(page.getByText("Question 2")).toBeVisible();
