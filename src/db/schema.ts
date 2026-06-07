@@ -48,6 +48,8 @@ export const bundles = sqliteTable('bundles', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   title: text('title').notNull(),
   description: text('description'),
+  emoji: text('emoji'),                                       // single emoji character used as bundle icon
+  coverColor: text('cover_color'),                            // hex color for the bundle cover bar
   examQuestionCount: integer('exam_question_count'),         // default question count for exams
   examTimeLimitSeconds: integer('exam_time_limit_seconds'),   // default time limit
   examDifficultyFilter: real('exam_difficulty_filter'),       // default difficulty filter (0-1)

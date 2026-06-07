@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { BundleEmojiPicker } from "@/components/bundle-emoji-picker";
+import { BundleColorPicker } from "@/components/bundle-color-picker";
 import { getDb } from "@/db";
 import { createBundle } from "@/lib/services";
 import { toast } from "sonner";
@@ -16,6 +18,8 @@ export default function NewBundlePage() {
   const router = useRouter();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [emoji, setEmoji] = useState<string | null>(null);
+  const [coverColor, setCoverColor] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
   const handleSubmit = async () => {
@@ -26,7 +30,12 @@ export default function NewBundlePage() {
     setSaving(true);
     try {
       const { db } = await getDb();
-      const bundle = await createBundle(db, { title: title.trim(), description: description.trim() || null });
+      const bundle = await createBundle(db, {
+        title: title.trim(),
+        description: description.trim() || null,
+        emoji,
+        coverColor,
+      });
       if (bundle) {
         toast.success("Bundle created");
         router.push(`/study-dome/bundles/${bundle.id}`);
@@ -60,6 +69,14 @@ export default function NewBundlePage() {
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Brief description..."
           />
+        </div>
+        <div className="space-y-2">
+          <Label>Icon (Optional)</Label>
+          <BundleEmojiPicker emoji={emoji} onEmojiChange={setEmoji} />
+        </div>
+        <div className="space-y-2">
+          <Label>Cover Color (Optional)</Label>
+          <BundleColorPicker color={coverColor} onColorChange={setCoverColor} />
         </div>
         <div className="flex gap-2">
           <Button onClick={handleSubmit} disabled={saving}>

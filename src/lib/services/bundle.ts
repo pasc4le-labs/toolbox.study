@@ -3,10 +3,23 @@ import * as schema from '@/db/schema';
 import { persistNow } from '@/db';
 import type { Db } from './types';
 
-export async function createBundle(db: Db, data: { title: string; description?: string | null }) {
+export async function createBundle(
+  db: Db,
+  data: {
+    title: string;
+    description?: string | null;
+    emoji?: string | null;
+    coverColor?: string | null;
+  },
+) {
   const [bundle] = await db
     .insert(schema.bundles)
-    .values({ title: data.title, description: data.description ?? null })
+    .values({
+      title: data.title,
+      description: data.description ?? null,
+      emoji: data.emoji ?? null,
+      coverColor: data.coverColor ?? null,
+    })
     .returning();
   if (bundle) await persistNow();
   return bundle ?? null;
@@ -15,6 +28,8 @@ export async function createBundle(db: Db, data: { title: string; description?: 
 export async function updateBundle(db: Db, id: number, data: {
   title?: string;
   description?: string | null;
+  emoji?: string | null;
+  coverColor?: string | null;
   examQuestionCount?: number | null;
   examTimeLimitSeconds?: number | null;
   examDifficultyFilter?: number | null;

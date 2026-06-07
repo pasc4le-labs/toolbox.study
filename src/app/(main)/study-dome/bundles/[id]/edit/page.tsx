@@ -9,6 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
+import { BundleEmojiPicker } from "@/components/bundle-emoji-picker";
+import { BundleColorPicker } from "@/components/bundle-color-picker";
 import { getDb } from "@/db";
 import { getBundleById, updateBundle } from "@/lib/services";
 import { toast } from "sonner";
@@ -20,6 +22,8 @@ export default function EditBundlePage({ params }: { params: Promise<{ id: strin
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [emoji, setEmoji] = useState<string | null>(null);
+  const [coverColor, setCoverColor] = useState<string | null>(null);
   const [examQuestionCount, setExamQuestionCount] = useState<number>(5);
   const [examTimeLimitMinutes, setExamTimeLimitMinutes] = useState<number>(0);
   const [examDifficultyFilter, setExamDifficultyFilter] = useState<number>(0);
@@ -36,6 +40,8 @@ export default function EditBundlePage({ params }: { params: Promise<{ id: strin
         if (bundle) {
           setTitle(bundle.title);
           setDescription(bundle.description ?? "");
+          setEmoji(bundle.emoji);
+          setCoverColor(bundle.coverColor);
           setExamQuestionCount(bundle.examQuestionCount ?? 5);
           setExamTimeLimitMinutes(bundle.examTimeLimitSeconds ? Math.round(bundle.examTimeLimitSeconds / 60) : 0);
           setExamDifficultyFilter(Math.round((bundle.examDifficultyFilter ?? 0) * 100));
@@ -62,6 +68,8 @@ export default function EditBundlePage({ params }: { params: Promise<{ id: strin
       await updateBundle(db, bundleId, {
         title: title.trim(),
         description: description.trim() || null,
+        emoji,
+        coverColor,
         examQuestionCount: examQuestionCount || null,
         examTimeLimitSeconds: examTimeLimitMinutes > 0 ? examTimeLimitMinutes * 60 : null,
         examDifficultyFilter: examDifficultyFilter / 100,
@@ -101,6 +109,14 @@ export default function EditBundlePage({ params }: { params: Promise<{ id: strin
         <div className="space-y-2">
           <Label htmlFor="desc">Description</Label>
           <Textarea id="desc" value={description} onChange={(e) => setDescription(e.target.value)} />
+        </div>
+        <div className="space-y-2">
+          <Label>Icon (Optional)</Label>
+          <BundleEmojiPicker emoji={emoji} onEmojiChange={setEmoji} />
+        </div>
+        <div className="space-y-2">
+          <Label>Cover Color (Optional)</Label>
+          <BundleColorPicker color={coverColor} onColorChange={setCoverColor} />
         </div>
       </div>
 

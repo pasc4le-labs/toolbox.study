@@ -47,6 +47,31 @@ describe("bundle service", () => {
       });
       expect(bundle?.description).toBe("My description");
     });
+
+    it("creates a bundle with emoji and coverColor", async () => {
+      const bundle = await createBundle(handle.db, {
+        title: "Bio",
+        emoji: "🧬",
+        coverColor: "#7c3aed",
+      });
+      expect(bundle?.emoji).toBe("🧬");
+      expect(bundle?.coverColor).toBe("#7c3aed");
+    });
+
+    it("defaults emoji and coverColor to null when not provided", async () => {
+      const bundle = await createBundle(handle.db, { title: "B" });
+      expect(bundle?.emoji).toBeNull();
+      expect(bundle?.coverColor).toBeNull();
+    });
+
+    it("creates a bundle with only emoji", async () => {
+      const bundle = await createBundle(handle.db, {
+        title: "Books",
+        emoji: "📚",
+      });
+      expect(bundle?.emoji).toBe("📚");
+      expect(bundle?.coverColor).toBeNull();
+    });
   });
 
   describe("updateBundle", () => {
@@ -66,6 +91,45 @@ describe("bundle service", () => {
       const updated = await getBundleById(handle.db, bundle.id);
       expect(updated?.examQuestionCount).toBe(10);
       expect(updated?.examTimeLimitSeconds).toBe(300);
+    });
+
+    it("sets emoji and coverColor", async () => {
+      const bundle = await createBundle(handle.db, { title: "B" });
+      await updateBundle(handle.db, bundle.id, {
+        emoji: "🔬",
+        coverColor: "#ef4444",
+      });
+      const updated = await getBundleById(handle.db, bundle.id);
+      expect(updated?.emoji).toBe("🔬");
+      expect(updated?.coverColor).toBe("#ef4444");
+    });
+
+    it("clears emoji and coverColor when set to null", async () => {
+      const bundle = await createBundle(handle.db, {
+        title: "B",
+        emoji: "🎯",
+        coverColor: "#22c55e",
+      });
+      await updateBundle(handle.db, bundle.id, {
+        emoji: null,
+        coverColor: null,
+      });
+      const updated = await getBundleById(handle.db, bundle.id);
+      expect(updated?.emoji).toBeNull();
+      expect(updated?.coverColor).toBeNull();
+    });
+
+    it("preserves emoji and coverColor when not specified", async () => {
+      const bundle = await createBundle(handle.db, {
+        title: "B",
+        emoji: "🧠",
+        coverColor: "#3b82f6",
+      });
+      await updateBundle(handle.db, bundle.id, { title: "New" });
+      const updated = await getBundleById(handle.db, bundle.id);
+      expect(updated?.title).toBe("New");
+      expect(updated?.emoji).toBe("🧠");
+      expect(updated?.coverColor).toBe("#3b82f6");
     });
   });
 

@@ -118,5 +118,38 @@
     "bps": true,
     "folderMillis": 1780781438276,
     "hash": "24156bbc03e974b0958832100c0a22eb598c85bc083d5d3e01bb29c1267f4a75"
+  },
+  {
+    "sql": [
+      "PRAGMA foreign_keys=OFF;",
+      "\nCREATE TABLE `__new_ai_providers` (\n\t`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,\n\t`name` text NOT NULL,\n\t`provider_type` text DEFAULT 'openai-compatible' NOT NULL,\n\t`base_url` text NOT NULL,\n\t`api_key` text,\n\t`model_id` text NOT NULL,\n\t`is_default` integer DEFAULT false NOT NULL,\n\t`created_at` integer DEFAULT 1780836594598 NOT NULL\n);\n",
+      "\nINSERT INTO `__new_ai_providers`(\"id\", \"name\", \"provider_type\", \"base_url\", \"api_key\", \"model_id\", \"is_default\", \"created_at\") SELECT \"id\", \"name\", \"provider_type\", \"base_url\", \"api_key\", \"model_id\", \"is_default\", \"created_at\" FROM `ai_providers`;",
+      "\nDROP TABLE `ai_providers`;",
+      "\nALTER TABLE `__new_ai_providers` RENAME TO `ai_providers`;",
+      "\nPRAGMA foreign_keys=ON;",
+      "\nCREATE TABLE `__new_bundles` (\n\t`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,\n\t`title` text NOT NULL,\n\t`description` text,\n\t`emoji` text,\n\t`cover_color` text,\n\t`exam_question_count` integer,\n\t`exam_time_limit_seconds` integer,\n\t`exam_difficulty_filter` real,\n\t`exam_points_per_correct` real,\n\t`exam_points_per_wrong` real,\n\t`created_at` integer DEFAULT 1780836594598 NOT NULL\n);\n",
+      "\nINSERT INTO `__new_bundles`(\"id\", \"title\", \"description\", \"emoji\", \"cover_color\", \"exam_question_count\", \"exam_time_limit_seconds\", \"exam_difficulty_filter\", \"exam_points_per_correct\", \"exam_points_per_wrong\", \"created_at\") SELECT \"id\", \"title\", \"description\", \"emoji\", \"cover_color\", \"exam_question_count\", \"exam_time_limit_seconds\", \"exam_difficulty_filter\", \"exam_points_per_correct\", \"exam_points_per_wrong\", \"created_at\" FROM `bundles`;",
+      "\nDROP TABLE `bundles`;",
+      "\nALTER TABLE `__new_bundles` RENAME TO `bundles`;",
+      "\nCREATE TABLE `__new_card_fsrs` (\n\t`card_id` integer PRIMARY KEY NOT NULL,\n\t`difficulty` real DEFAULT 0 NOT NULL,\n\t`stability` real DEFAULT 0 NOT NULL,\n\t`state` integer DEFAULT 0 NOT NULL,\n\t`due` integer DEFAULT 1780836594598 NOT NULL,\n\t`elapsed_days` integer DEFAULT 0 NOT NULL,\n\t`scheduled_days` integer DEFAULT 0 NOT NULL,\n\t`reps` integer DEFAULT 0 NOT NULL,\n\t`lapses` integer DEFAULT 0 NOT NULL,\n\t`last_review` integer,\n\t`learning_steps` integer DEFAULT 0 NOT NULL,\n\tFOREIGN KEY (`card_id`) REFERENCES `cards`(`id`) ON UPDATE no action ON DELETE cascade\n);\n",
+      "\nINSERT INTO `__new_card_fsrs`(\"card_id\", \"difficulty\", \"stability\", \"state\", \"due\", \"elapsed_days\", \"scheduled_days\", \"reps\", \"lapses\", \"last_review\", \"learning_steps\") SELECT \"card_id\", \"difficulty\", \"stability\", \"state\", \"due\", \"elapsed_days\", \"scheduled_days\", \"reps\", \"lapses\", \"last_review\", \"learning_steps\" FROM `card_fsrs`;",
+      "\nDROP TABLE `card_fsrs`;",
+      "\nALTER TABLE `__new_card_fsrs` RENAME TO `card_fsrs`;",
+      "\nCREATE TABLE `__new_cards` (\n\t`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,\n\t`type` text NOT NULL,\n\t`front` text NOT NULL,\n\t`back` text NOT NULL,\n\t`explanation` text,\n\t`options` text,\n\t`correct_indices` text,\n\t`created_at` integer DEFAULT 1780836594598 NOT NULL,\n\t`updated_at` integer DEFAULT 1780836594598 NOT NULL\n);\n",
+      "\nINSERT INTO `__new_cards`(\"id\", \"type\", \"front\", \"back\", \"explanation\", \"options\", \"correct_indices\", \"created_at\", \"updated_at\") SELECT \"id\", \"type\", \"front\", \"back\", \"explanation\", \"options\", \"correct_indices\", \"created_at\", \"updated_at\" FROM `cards`;",
+      "\nDROP TABLE `cards`;",
+      "\nALTER TABLE `__new_cards` RENAME TO `cards`;",
+      "\nCREATE TABLE `__new_exams` (\n\t`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,\n\t`title` text NOT NULL,\n\t`bundle_id` integer,\n\t`question_count` integer NOT NULL,\n\t`time_limit_seconds` integer,\n\t`difficulty_filter` real,\n\t`points_per_correct` real DEFAULT 1 NOT NULL,\n\t`points_per_wrong` real DEFAULT 0 NOT NULL,\n\t`created_at` integer DEFAULT 1780836594598 NOT NULL,\n\tFOREIGN KEY (`bundle_id`) REFERENCES `bundles`(`id`) ON UPDATE no action ON DELETE cascade\n);\n",
+      "\nINSERT INTO `__new_exams`(\"id\", \"title\", \"bundle_id\", \"question_count\", \"time_limit_seconds\", \"difficulty_filter\", \"points_per_correct\", \"points_per_wrong\", \"created_at\") SELECT \"id\", \"title\", \"bundle_id\", \"question_count\", \"time_limit_seconds\", \"difficulty_filter\", \"points_per_correct\", \"points_per_wrong\", \"created_at\" FROM `exams`;",
+      "\nDROP TABLE `exams`;",
+      "\nALTER TABLE `__new_exams` RENAME TO `exams`;",
+      "\nCREATE TABLE `__new_todos` (\n\t`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,\n\t`title` text NOT NULL,\n\t`done` integer DEFAULT false NOT NULL,\n\t`created_at` integer DEFAULT 1780836594598 NOT NULL\n);\n",
+      "\nINSERT INTO `__new_todos`(\"id\", \"title\", \"done\", \"created_at\") SELECT \"id\", \"title\", \"done\", \"created_at\" FROM `todos`;",
+      "\nDROP TABLE `todos`;",
+      "\nALTER TABLE `__new_todos` RENAME TO `todos`;"
+    ],
+    "bps": true,
+    "folderMillis": 1780836594607,
+    "hash": "e88d43ac6675c3ad8601af57f20cb606ac649d9b7f237307c4593bde54b8b88d"
   }
 ]

@@ -211,6 +211,13 @@ export default function BundleDetailPage({ params }: { params: Promise<{ id: str
 
   return (
     <Boxed className="py-8">
+      {bundle.coverColor && (
+        <div
+          className="mb-4 h-2 w-full rounded-lg"
+          style={{ backgroundColor: bundle.coverColor }}
+          aria-hidden
+        />
+      )}
       <div className="mb-4">
         <Button asChild variant="link" className="px-0">
           <Link href="/study-dome/bundles">
@@ -223,7 +230,10 @@ export default function BundleDetailPage({ params }: { params: Promise<{ id: str
       <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <PageTitle>Bundle Detail</PageTitle>
-      <h1 className="text-3xl font-bold tracking-tight">{bundle.title}</h1>
+          <h1 className="flex items-center gap-2 text-3xl font-bold tracking-tight">
+            {bundle.emoji && <span className="text-4xl leading-none">{bundle.emoji}</span>}
+            {bundle.title}
+          </h1>
           {bundle.description && (
             <p className="mt-1 text-muted-foreground">{bundle.description}</p>
           )}

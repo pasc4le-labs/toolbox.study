@@ -13,6 +13,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { BundleCard } from "@/components/bundle-card";
 import { getDb } from "@/db";
 import { getAllBundles } from "@/lib/services";
 
@@ -136,16 +137,7 @@ export default function StudyDomePage() {
       ) : (
         <div className="grid gap-4 md:grid-cols-3">
           {bundles.map((bundle) => (
-            <Link key={bundle.id} href={`/study-dome/bundles/${bundle.id}`}>
-              <Card className="cursor-pointer transition-all hover:border-primary hover:shadow-sm">
-                <CardHeader>
-                  <CardTitle className="text-lg">{bundle.title}</CardTitle>
-                  {bundle.description && (
-                    <CardDescription>{bundle.description}</CardDescription>
-                  )}
-                </CardHeader>
-              </Card>
-            </Link>
+            <BundleCard key={bundle.id} bundle={bundle} />
           ))}
         </div>
       )}

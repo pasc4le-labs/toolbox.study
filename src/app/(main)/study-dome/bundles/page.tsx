@@ -2,11 +2,12 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { RiAddLine, RiDeleteBinLine, RiEditLine } from "@remixicon/react";
+import { RiAddLine } from "@remixicon/react";
 import { PageTitle } from "@/components/page-title";
 import { Boxed } from "@/components/boxed";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
+import { BundleCard } from "@/components/bundle-card";
 import {
   Dialog,
   DialogContent,
@@ -89,28 +90,13 @@ export default function BundlesPage() {
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {bundles.map((bundle) => (
-            <Card key={bundle.id}>
-              <Link href={`/study-dome/bundles/${bundle.id}`}>
-                <CardHeader>
-                  <CardTitle className="text-lg">{bundle.title}</CardTitle>
-                  {bundle.description && (
-                    <CardDescription>{bundle.description}</CardDescription>
-                  )}
-                </CardHeader>
-              </Link>
-              <CardContent className="flex flex-wrap gap-2 pt-0">
-                <Button variant="outline" asChild>
-                  <Link href={`/study-dome/bundles/${bundle.id}/edit`}>
-                    <RiEditLine className="mr-1 h-4 w-4" />
-                    Edit
-                  </Link>
-                </Button>
-                <Button variant="outline" onClick={() => setDeleteId(bundle.id)}>
-                  <RiDeleteBinLine className="mr-1 h-4 w-4" />
-                  Delete
-                </Button>
-              </CardContent>
-            </Card>
+            <BundleCard
+              key={bundle.id}
+              bundle={bundle}
+              showActions
+              editHref={`/study-dome/bundles/${bundle.id}/edit`}
+              onDelete={(id) => setDeleteId(id)}
+            />
           ))}
         </div>
       )}
