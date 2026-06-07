@@ -244,6 +244,74 @@ describe("exchange-import", () => {
     expect(cards[0]?.correctIndices).toBeNull();
   });
 
+  it("deduplicates bundle card IDs when duplicate cards map to the same existing card", async () => {
+    const cardResult = await importExchangeData(handle.db, {
+      cards: [
+        {
+          id: 1,
+          type: "knowledge",
+          front: "Q1",
+          back: "A1",
+          explanation: null,
+          options: null,
+          correctIndices: null,
+          tagNames: [],
+        },
+      ],
+      bundles: [],
+      exams: [],
+    });
+    expect(cardResult.cards).toBe(1);
+
+    const existingCards = await getAllCards(handle.db);
+    const existingCardId = existingCards[0]!.id;
+
+    const result = await importExchangeData(handle.db, {
+      cards: [
+        {
+          id: 10,
+          type: "knowledge",
+          front: "Q1",
+          back: "Different",
+          explanation: null,
+          options: null,
+          correctIndices: null,
+          tagNames: [],
+        },
+        {
+          id: 20,
+          type: "knowledge",
+          front: "Q2",
+          back: "A2",
+          explanation: null,
+          options: null,
+          correctIndices: null,
+          tagNames: [],
+        },
+      ],
+      bundles: [
+        {
+          id: 100,
+          title: "B",
+          description: null,
+          cardIds: [10, 20],
+        },
+      ],
+      exams: [],
+    });
+
+    expect(result.cards).toBe(1);
+    expect(result.bundles).toBe(1);
+
+    const bundleCards = await handle.db
+      .select()
+      .from(schema.bundleCards)
+      .where(eq(schema.bundleCards.bundleId, existingCardId + 2));
+
+    const cardIds = bundleCards.map((bc) => bc.cardId);
+    expect(new Set(cardIds).size).toBe(cardIds.length);
+  });
+
   it("imports bundle exam settings when present", async () => {
     await importExchangeData(handle.db, {
       cards: [],

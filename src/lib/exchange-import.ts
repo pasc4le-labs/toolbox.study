@@ -116,10 +116,14 @@ export async function importExchangeData(
       });
     }
 
-    // Map old card IDs to new card IDs and add to bundle
-    const newCardIds = bundleData.cardIds
-      .map((oldId) => cardIdMap.get(oldId))
-      .filter((id): id is number => id !== undefined);
+    // Map old card IDs to new card IDs, deduplicating (duplicate cards can map
+    // multiple old IDs to the same new ID, which would violate the composite
+    // primary key on bundle_cards).
+    const newCardIds = [...new Set(
+      bundleData.cardIds
+        .map((oldId) => cardIdMap.get(oldId))
+        .filter((id): id is number => id !== undefined),
+    )];
 
     console.log(`[exchange/import] Bundle "${bundleData.title}" (oldId=${bundleData.id} → newId=${newBundle.id}): cardIds=${JSON.stringify(bundleData.cardIds)} → mapped=${JSON.stringify(newCardIds)}`);
 
