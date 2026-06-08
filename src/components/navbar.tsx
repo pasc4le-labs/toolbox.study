@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { RiSettings3Line } from "@remixicon/react";
 import { Boxed } from "@/components/boxed";
-import { ModeToggle } from "@/components/mode-toggle";
 import { MobileNav } from "@/components/mobile-nav";
 import { Logo } from "@/components/logo";
 
@@ -50,7 +49,6 @@ export function Navbar() {
               <RiSettings3Line className="h-5 w-5" />
             </Link>
           </nav>
-          <ModeToggle />
         </div>
       </Boxed>
     </header>
