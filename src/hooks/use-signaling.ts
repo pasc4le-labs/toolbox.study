@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { loadRelayHostname, buildRelayUrl } from "@/lib/relay-prefs";
 
 export type SignalingState = {
   status: "idle" | "connecting" | "waiting" | "paired" | "error";
@@ -16,10 +17,12 @@ export type SignalingActions = {
   disconnect: () => void;
 };
 
-const WS_URL =
-  typeof window !== "undefined"
-    ? process.env.NEXT_PUBLIC_RELAY_URL ?? "ws://localhost:8080/ws"
-    : "";
+function getRelayUrl(): string {
+  const envUrl = typeof window !== "undefined" ? process.env.NEXT_PUBLIC_RELAY_URL : undefined;
+  if (envUrl) return envUrl;
+  const hostname = loadRelayHostname();
+  return buildRelayUrl(hostname);
+}
 
 export function useSignaling(): [SignalingState, SignalingActions] {
   const [state, setState] = useState<SignalingState>({
@@ -37,11 +40,12 @@ export function useSignaling(): [SignalingState, SignalingActions] {
 
   const connect = useCallback(() => {
     if (wsRef.current?.readyState === WebSocket.OPEN) return;
-    if (!WS_URL) return;
+    const wsUrl = getRelayUrl();
+    if (!wsUrl) return;
 
     setState((s) => ({ ...s, status: "connecting", error: null }));
 
-    const ws = new WebSocket(WS_URL);
+    const ws = new WebSocket(wsUrl);
     wsRef.current = ws;
 
     ws.onopen = () => {

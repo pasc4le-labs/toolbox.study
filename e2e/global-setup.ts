@@ -22,6 +22,7 @@ const ROUTES = [
   "/exchange-center",
   "/exchange-center/offer",
   "/exchange-center/receive",
+  "/settings",
 ];
 
 async function waitForServer(url: string, timeoutMs: number) {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { loadRelayHostname, buildRelayUrl } from "@/lib/relay-prefs";
 
 export type SyncSignalingState = {
   status: "idle" | "connecting" | "waiting" | "paired" | "error";
@@ -16,10 +17,12 @@ export type SyncSignalingActions = {
   disconnect: () => void;
 };
 
-const WS_URL =
-  typeof window !== "undefined"
-    ? process.env.NEXT_PUBLIC_RELAY_URL ?? "ws://localhost:8080/ws"
-    : "";
+function getRelayUrl(): string {
+  const envUrl = typeof window !== "undefined" ? process.env.NEXT_PUBLIC_RELAY_URL : undefined;
+  if (envUrl) return envUrl;
+  const hostname = loadRelayHostname();
+  return buildRelayUrl(hostname);
+}
 
 export function useSyncSignaling(): [SyncSignalingState, SyncSignalingActions] {
   const [state, setState] = useState<SyncSignalingState>({
@@ -40,11 +43,12 @@ export function useSyncSignaling(): [SyncSignalingState, SyncSignalingActions] {
     if (wsRef.current?.readyState === WebSocket.OPEN) {
       wsRef.current.close();
     }
-    if (!WS_URL) return;
+    const wsUrl = getRelayUrl();
+    if (!wsUrl) return;
 
     setState({ status: "connecting", roomId: null, error: null, remoteSignal: null, isInitiator: null });
 
-    const ws = new WebSocket(WS_URL);
+    const ws = new WebSocket(wsUrl);
     wsRef.current = ws;
 
     ws.onopen = () => {

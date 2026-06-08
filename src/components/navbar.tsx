@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { RiLoopLeftLine } from "@remixicon/react";
+import { RiSettings3Line } from "@remixicon/react";
 import { Boxed } from "@/components/boxed";
 import { ModeToggle } from "@/components/mode-toggle";
 import { MobileNav } from "@/components/mobile-nav";
@@ -43,11 +43,11 @@ export function Navbar() {
               Exchange Center
             </Link>
             <Link
-              href="/sync"
+              href="/settings"
               className="text-muted-foreground transition-colors hover:text-foreground"
-              aria-label="Device Sync"
+              aria-label="Settings"
             >
-              <RiLoopLeftLine className="h-5 w-5" />
+              <RiSettings3Line className="h-5 w-5" />
             </Link>
           </nav>
           <ModeToggle />

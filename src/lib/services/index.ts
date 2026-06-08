@@ -5,3 +5,5 @@ export { createBundle, updateBundle, deleteBundle, getAllBundles, getBundleById,
 export { getOrCreateCardFsrs, rateCard, getDueCards } from './fsrs';
 export { createExam, startExamAttempt, getExamById, getAllExams, submitExamAnswer, getExamAnswers, getExamQuestions, completeExamAttempt, getExamResults } from './exam';
 export { createAiProvider, updateAiProvider, deleteAiProvider, getAllAiProviders, getDefaultAiProvider } from './ai-provider';
+export { getStats } from './stats';
+export type { AppStats } from './stats';

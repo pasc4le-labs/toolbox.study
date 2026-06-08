@@ -46,6 +46,8 @@ Always run `lint` then `typecheck` then `test` in that order before considering 
 | `src/app/(main)/exchange-center/` | P2P card/bundle exchange via WebRTC |
 | `relay/` | Go WebSocket signaling server for Exchange Center |
 | `e2e/` | Playwright E2E tests (separate from unit tests) |
+| `src/app/(main)/settings/` | Settings page (stats, preferences, syncing, about) |
+| `src/app/(main)/settings/_components/` | Settings sub-components (tabs, provider) |
 
 ## DB schema changes
 
@@ -64,6 +66,7 @@ Playwright config is in `e2e/playwright.config.ts`. It auto-starts the dev serve
 - `NEXT_PUBLIC_RELAY_URL` — WebSocket URL for the Exchange Center signaling relay (e.g. `ws://localhost:8080/ws`). See `.env.example`.
 - `NEXT_PUBLIC_GEMINI_UQF_GEM` — Optional URL to a Gemini Gem that generates UQF flashcards. When set, a "Gemini Gem" button appears on the UQF Import tab.
 - `NEXT_PUBLIC_GEMINI_JSON_GEM` — Optional URL to a Gemini Gem that generates JSON flashcards. When set, a "Gemini Gem" button appears on the JSON Import tab.
+- `NEXT_PUBLIC_APP_VERSION` — Optional override for the app version shown in Settings > About. Falls back to `package.json` version.
 
 ## Gotchas
 
