@@ -7,6 +7,7 @@ export type SyncSignalingState = {
   roomId: string | null;
   error: string | null;
   remoteSignal: unknown | null;
+  isInitiator: boolean | null;
 };
 
 export type SyncSignalingActions = {
@@ -26,6 +27,7 @@ export function useSyncSignaling(): [SyncSignalingState, SyncSignalingActions] {
     roomId: null,
     error: null,
     remoteSignal: null,
+    isInitiator: null,
   });
 
   const wsRef = useRef<WebSocket | null>(null);
@@ -40,7 +42,7 @@ export function useSyncSignaling(): [SyncSignalingState, SyncSignalingActions] {
     }
     if (!WS_URL) return;
 
-    setState({ status: "connecting", roomId: null, error: null, remoteSignal: null });
+    setState({ status: "connecting", roomId: null, error: null, remoteSignal: null, isInitiator: null });
 
     const ws = new WebSocket(WS_URL);
     wsRef.current = ws;
@@ -58,6 +60,17 @@ export function useSyncSignaling(): [SyncSignalingState, SyncSignalingActions] {
               ...s,
               status: "waiting",
               roomId: roomId,
+              isInitiator: true,
+              remoteSignal: null,
+            }));
+            break;
+          case "room_joined":
+            setState((s) => ({
+              ...s,
+              status: "paired",
+              roomId: roomId,
+              isInitiator: false,
+              remoteSignal: null,
             }));
             break;
           case "peer_joined":
@@ -130,6 +143,7 @@ export function useSyncSignaling(): [SyncSignalingState, SyncSignalingActions] {
       roomId: null,
       error: null,
       remoteSignal: null,
+      isInitiator: null,
     });
   }, []);
 

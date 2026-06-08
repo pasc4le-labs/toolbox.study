@@ -92,33 +92,37 @@ func (h *Hub) CreateRoomWithType(c *Client, roomType RoomType) string {
 	return code
 }
 
-func (h *Hub) CreateOrJoinSyncRoom(c *Client, code string) error {
+func (h *Hub) CreateOrJoinSyncRoom(c *Client, code string) (bool, error) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 
 	if room, exists := h.rooms[code]; exists {
-		if room.IsExpiredWithTTLs(h.config.RoomTTL, h.config.SyncRoomTTL) {
-			delete(h.rooms, code)
-			return errRoomExpired
-		}
-		if !room.AddClient(c) {
-			return errRoomFull
-		}
-		h.clients[c.ID] = c
-		for _, peer := range room.Clients {
-			other := room.Other(peer)
-			if other != nil {
-				peer.Send(OutMessage{Type: "peer_joined", PeerID: other.ID})
+		if room.IsExpiredWithTTLs(h.config.RoomTTL, h.config.SyncRoomTTL) || room.IsEmpty() {
+			for _, client := range room.Clients {
+				client.Send(OutMessage{Type: "error", Message: "room expired"})
+				client.Close()
+				delete(h.clients, client.ID)
 			}
+			delete(h.rooms, code)
+		} else {
+			if !room.AddClient(c) {
+				return false, errRoomFull
+			}
+			h.clients[c.ID] = c
+			for id, peer := range room.Clients {
+				if id != c.ID {
+					peer.Send(OutMessage{Type: "peer_joined", PeerID: c.ID})
+				}
+			}
+			return false, nil
 		}
-		return nil
 	}
 
 	room := NewRoomWithType(code, RoomTypeSync)
 	room.AddClient(c)
 	h.rooms[code] = room
 	h.clients[c.ID] = c
-	return nil
+	return true, nil
 }
 
 func (h *Hub) CreateSyncRoom(c *Client, code string) error {
@@ -224,11 +228,16 @@ func (h *Hub) handleMessage(c *Client, msg InMessage) {
 				c.Send(OutMessage{Type: "error", Message: "code required for sync room"})
 				return
 			}
-			if err := h.CreateOrJoinSyncRoom(c, code); err != nil {
+			created, err := h.CreateOrJoinSyncRoom(c, code)
+			if err != nil {
 				c.Send(OutMessage{Type: "error", Message: err.Error()})
 				return
 			}
-			c.Send(OutMessage{Type: "room_created", Code: code})
+			if created {
+				c.Send(OutMessage{Type: "room_created", Code: code})
+			} else {
+				c.Send(OutMessage{Type: "room_joined", Code: code})
+			}
 		} else {
 			code := h.CreateRoom(c)
 			c.Send(OutMessage{Type: "room_created", Code: code})

@@ -225,6 +225,90 @@ drain:
 	}
 }
 
+func TestCreateOrJoinSyncRoomCreatesNew(t *testing.T) {
+	hub := NewHub(Config{RoomTTL: 10 * time.Minute, SyncRoomTTL: 24 * time.Hour})
+	c1 := NewClient("a1", hub, nil)
+
+	created, err := hub.CreateOrJoinSyncRoom(c1, "sync-room-1")
+	if err != nil {
+		t.Fatalf("create sync room failed: %v", err)
+	}
+	if !created {
+		t.Fatal("expected created=true for new room")
+	}
+
+	room, exists := hub.rooms["sync-room-1"]
+	if !exists {
+		t.Fatal("sync room not found in hub")
+	}
+	if room.Type != RoomTypeSync {
+		t.Fatalf("expected RoomTypeSync, got %s", room.Type)
+	}
+}
+
+func TestCreateOrJoinSyncRoomJoinsExisting(t *testing.T) {
+	hub := NewHub(Config{RoomTTL: 10 * time.Minute, SyncRoomTTL: 24 * time.Hour})
+	c1 := NewClient("a1", hub, nil)
+	c2 := NewClient("b2", hub, nil)
+
+	created, _ := hub.CreateOrJoinSyncRoom(c1, "sync-room-1")
+	if !created {
+		t.Fatal("expected first client to create the room")
+	}
+	drainChan(c1.send)
+
+	joined, err := hub.CreateOrJoinSyncRoom(c2, "sync-room-1")
+	if err != nil {
+		t.Fatalf("join sync room failed: %v", err)
+	}
+	if joined {
+		t.Fatal("expected joined=false for second client joining existing room")
+	}
+
+	gotPeerJoined := false
+drainJoin:
+	for {
+		select {
+		case msg := <-c1.send:
+			if msg.Type == "peer_joined" {
+				gotPeerJoined = true
+			}
+		default:
+			break drainJoin
+		}
+	}
+	if !gotPeerJoined {
+		t.Fatal("c1 did not receive peer_joined when c2 joined")
+	}
+}
+
+func TestCreateOrJoinSyncRoomHandlesEmptyRoom(t *testing.T) {
+	hub := NewHub(Config{RoomTTL: 10 * time.Minute, SyncRoomTTL: 24 * time.Hour})
+	c1 := NewClient("a1", hub, nil)
+
+	hub.CreateOrJoinSyncRoom(c1, "sync-room-empty")
+	drainChan(c1.send)
+
+	hub.unregister(c1)
+
+	room, exists := hub.rooms["sync-room-empty"]
+	if !exists {
+		t.Fatal("sync room should persist after disconnect")
+	}
+	if !room.IsEmpty() {
+		t.Fatal("sync room should be empty after disconnect")
+	}
+
+	c2 := NewClient("b2", hub, nil)
+	created, err := hub.CreateOrJoinSyncRoom(c2, "sync-room-empty")
+	if err != nil {
+		t.Fatalf("re-join empty room failed: %v", err)
+	}
+	if !created {
+		t.Fatal("expected created=true when joining empty room (should be treated as new)")
+	}
+}
+
 func drainChan(ch chan OutMessage) {
 	for {
 		select {

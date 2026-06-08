@@ -245,3 +245,69 @@ func TestConfigFromEnv(t *testing.T) {
 		t.Fatalf("expected 10s sweep, got %v", cfg.SweepInterval)
 	}
 }
+
+func TestSyncRoomCreateAndJoin(t *testing.T) {
+	hub := NewHub(Config{RoomTTL: 10 * time.Minute, SyncRoomTTL: 24 * time.Hour})
+	go hub.RunSweep()
+
+	wsHandler := NewWSHandler(hub)
+	server := httptest.NewServer(wsHandler)
+	defer server.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	wsURL := strings.Replace(server.URL, "http", "ws", 1)
+
+	c1, _, err := websocket.Dial(ctx, wsURL+"/ws", nil)
+	if err != nil {
+		t.Fatalf("dial c1: %v", err)
+	}
+	defer c1.Close(websocket.StatusNormalClosure, "")
+
+	c2, _, err := websocket.Dial(ctx, wsURL+"/ws", nil)
+	if err != nil {
+		t.Fatalf("dial c2: %v", err)
+	}
+	defer c2.Close(websocket.StatusNormalClosure, "")
+
+	roomCode := "a1b2c3d4e5f6g7h8"
+
+	if err := wsjson.Write(ctx, c1, InMessage{Type: "create_room", Code: []byte(`"` + roomCode + `"`), RoomType: "sync"}); err != nil {
+		t.Fatalf("write create_room: %v", err)
+	}
+
+	var created OutMessage
+	if err := wsjson.Read(ctx, c1, &created); err != nil {
+		t.Fatalf("read room_created: %v", err)
+	}
+	if created.Type != "room_created" {
+		t.Fatalf("expected room_created, got %s", created.Type)
+	}
+	if created.Code != roomCode {
+		t.Fatalf("expected code %s, got %s", roomCode, created.Code)
+	}
+
+	if err := wsjson.Write(ctx, c2, InMessage{Type: "create_room", Code: []byte(`"` + roomCode + `"`), RoomType: "sync"}); err != nil {
+		t.Fatalf("write create_room: %v", err)
+	}
+
+	var roomJoined OutMessage
+	if err := wsjson.Read(ctx, c2, &roomJoined); err != nil {
+		t.Fatalf("read room_joined: %v", err)
+	}
+	if roomJoined.Type != "room_joined" {
+		t.Fatalf("expected room_joined, got %s", roomJoined.Type)
+	}
+	if roomJoined.Code != roomCode {
+		t.Fatalf("expected code %s, got %s", roomCode, roomJoined.Code)
+	}
+
+	var peerJoined OutMessage
+	if err := wsjson.Read(ctx, c1, &peerJoined); err != nil {
+		t.Fatalf("read peer_joined: %v", err)
+	}
+	if peerJoined.Type != "peer_joined" {
+		t.Fatalf("expected peer_joined, got %s", peerJoined.Type)
+	}
+}

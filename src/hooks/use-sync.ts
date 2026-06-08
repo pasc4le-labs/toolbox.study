@@ -56,7 +56,7 @@ export function useSync(): {
   }, [signalingActions]);
 
   const [peerState, peerActions] = useWebRTCPeer({
-    initiator: true,
+    initiator: signalingState.isInitiator ?? true,
     ready: signalingState.status === "paired",
     onSignal,
   });
