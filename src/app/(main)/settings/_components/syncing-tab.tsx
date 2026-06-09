@@ -17,7 +17,8 @@ import { generateSyncKey, validateSyncKey } from "@/lib/sync-identity";
 import {
   storeSyncKey, loadSyncKey, deleteSyncKey,
 } from "@/lib/sync-storage";
-import { useSync, type SyncStatus } from "@/hooks/use-sync";
+import { useSyncContext } from "@/components/sync-provider";
+import { type SyncStatus } from "@/hooks/use-sync";
 
 function SyncStatusIndicator({ status, error }: { status: SyncStatus; error: string | null }) {
   switch (status) {
@@ -67,7 +68,8 @@ export function SyncingTab() {
     progress,
     startSync,
     cancelSync,
-  } = useSync();
+    refreshSyncKey,
+  } = useSyncContext();
 
   useEffect(() => {
     requestAnimationFrame(() => {
@@ -79,8 +81,9 @@ export function SyncingTab() {
     const key = generateSyncKey();
     storeSyncKey(key);
     setStoredKey(key);
+    refreshSyncKey();
     toast.success("Sync key generated");
-  }, []);
+  }, [refreshSyncKey]);
 
   const handleSaveInput = useCallback(() => {
     const trimmed = inputKey.trim().toLowerCase();
@@ -91,16 +94,18 @@ export function SyncingTab() {
     setInputError(null);
     storeSyncKey(trimmed);
     setStoredKey(trimmed);
+    refreshSyncKey();
     toast.success("Sync key saved");
-  }, [inputKey]);
+  }, [inputKey, refreshSyncKey]);
 
   const handleDelete = useCallback(() => {
     deleteSyncKey();
     setStoredKey(null);
     setShowDeleteDialog(false);
     cancelSync();
+    refreshSyncKey();
     toast.success("Sync key deleted");
-  }, [cancelSync]);
+  }, [cancelSync, refreshSyncKey]);
 
   const handleCopy = useCallback(() => {
     if (storedKey) {

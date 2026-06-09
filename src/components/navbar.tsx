@@ -3,6 +3,8 @@ import { RiSettings3Line } from "@remixicon/react";
 import { Boxed } from "@/components/boxed";
 import { MobileNav } from "@/components/mobile-nav";
 import { Logo } from "@/components/logo";
+import { SyncButton } from "@/components/sync-button";
+import { Button } from "@/components/ui/button";
 
 export function Navbar() {
   return (
@@ -41,13 +43,12 @@ export function Navbar() {
             >
               Exchange Center
             </Link>
-            <Link
-              href="/settings"
-              className="text-muted-foreground transition-colors hover:text-foreground"
-              aria-label="Settings"
-            >
-              <RiSettings3Line className="h-5 w-5" />
-            </Link>
+            <SyncButton />
+            <Button variant="ghost" size="icon" asChild>
+              <Link href="/settings" aria-label="Settings">
+                <RiSettings3Line className="h-5 w-5" />
+              </Link>
+            </Button>
           </nav>
         </div>
       </Boxed>

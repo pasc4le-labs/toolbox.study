@@ -10,10 +10,12 @@ export default function MainLayout({
   return (
     <>
       <div className="min-h-screen max-h-screen h-screen overflow-y-auto">
-        <Navbar />
-        <main className="flex-1 flex flex-col overflow-y-auto">
-          <SyncProvider>{children}</SyncProvider>
-        </main>
+        <SyncProvider>
+          <Navbar />
+          <main className="flex-1 flex flex-col overflow-y-auto">
+            {children}
+          </main>
+        </SyncProvider>
       </div>
       <Footer />
     </>
