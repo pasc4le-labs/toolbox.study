@@ -46,6 +46,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           model: ${{ vars.PLANNER_MODEL || 'opencode/claude-sonnet-4-5' }}
+          share: false
           prompt: |
             You are a planning agent. Read the issue body below and use the "plan" skill to create a detailed PLAN.md.
 
@@ -80,6 +81,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           model: ${{ vars.WORKER_MODEL || 'opencode/claude-sonnet-4-5' }}
+          share: false
           prompt: |
             You are an implementation agent. Read PLAN.md at the project root and use the "implement" skill to execute every task in order.
 
@@ -98,6 +100,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           model: ${{ vars.COMMIT_MODEL || 'opencode/claude-sonnet-4-5' }}
+          share: false
           prompt: |
             You are a finalization agent. Your job is to commit any remaining uncommitted changes and create a pull request.
 
