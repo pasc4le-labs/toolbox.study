@@ -1,0 +1,100 @@
+name: OpenCode Bob
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  id-token: write
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  bob:
+    runs-on: ubuntu-latest
+    if: >
+      contains(vars.ALLOWED_USERS, github.event.comment.user.login) &&
+      startsWith(github.event.comment.body, '/bob')
+    steps:
+      - name: Parse command
+        id: parse
+        env:
+          COMMENT_BODY: ${{ github.event.comment.body }}
+        run: |
+          body="$COMMENT_BODY"
+
+          # Extract model from /bob[model] syntax, e.g. /bob[opencode/gpt-5.3-codex]
+          model=""
+          if echo "$body" | grep -qP '^\/bob\[.+?\]'; then
+            model=$(echo "$body" | grep -oP '^\/bob\[\K[^\]]+')
+            body=$(echo "$body" | sed -E 's/^\/bob\[[^\]]+\]\s*//')
+          else
+            body=$(echo "$body" | sed -E 's/^\/bob\s*//')
+          fi
+
+          # Trim leading/trailing whitespace
+          body=$(echo "$body" | sed -e 's/^[[:space:]]//' -e 's/[[:space:]]$//')
+
+          echo "model=$model" >> "$GITHUB_OUTPUT"
+          {
+            echo "prompt<<EOF"
+            echo "$body"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Determine model
+        id: resolve-model
+        env:
+          PARSED_MODEL: ${{ steps.parse.outputs.model }}
+        run: |
+          if [ -n "$PARSED_MODEL" ]; then
+            echo "resolved=$PARSED_MODEL" >> "$GITHUB_OUTPUT"
+          else
+            echo "resolved=${{ vars.WORKER_MODEL || 'opencode/claude-sonnet-4-5' }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Configure git user
+        run: |
+          git config user.name "${{ secrets.GIT_USER_NAME }}"
+          git config user.email "${{ secrets.GIT_USER_EMAIL }}"
+
+      - name: Checkout development branch
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ISSUE_NUMBER=${{ github.event.issue.number }}
+          BRANCH=$(gh issue develop "$ISSUE_NUMBER" --list --json headRefName --jq '.[0].headRefName')
+
+          if [ -z "$BRANCH" ]; then
+            echo "::error::No development branch linked to issue #$ISSUE_NUMBER"
+            exit 1
+          fi
+
+          git checkout "$BRANCH"
+
+      - name: Run Bob
+        uses: anomalyco/opencode/github@latest
+        env:
+          OPENCODE_ZEN_API_KEY: ${{ secrets.OPENCODE_ZEN_API_KEY }}
+          OPENCODE_GO_API_KEY: ${{ secrets.OPENCODE_GO_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          model: ${{ steps.resolve-model.outputs.resolved }}
+          prompt: ${{ steps.parse.outputs.prompt }}
+
+      - name: Commit remaining files and push
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            git add -A
+            git commit -m "ai(bob): apply changes from /bob command on issue #${{ github.event.issue.number }}"
+          fi
+          git push

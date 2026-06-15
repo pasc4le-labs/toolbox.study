@@ -1,0 +1,117 @@
+name: OpenCode Issue Planner
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  id-token: write
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  plan-and-implement:
+    runs-on: ubuntu-latest
+    if: contains(vars.ALLOWED_USERS, github.event.issue.user.login)
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Configure git user
+        run: |
+          git config user.name "${{ secrets.GIT_USER_NAME }}"
+          git config user.email "${{ secrets.GIT_USER_EMAIL }}"
+
+      - name: Determine base branch
+        id: base-branch
+        run: |
+          if git ls-remote --heads origin dev | grep -q .; then
+            echo "branch=dev" >> "$GITHUB_OUTPUT"
+          elif git ls-remote --heads origin main | grep -q .; then
+            echo "branch=main" >> "$GITHUB_OUTPUT"
+          else
+            echo "branch=master" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Plan the issue
+        id: plan
+        uses: anomalyco/opencode/github@latest
+        env:
+          OPENCODE_ZEN_API_KEY: ${{ secrets.OPENCODE_ZEN_API_KEY }}
+          OPENCODE_GO_API_KEY: ${{ secrets.OPENCODE_GO_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          model: ${{ vars.PLANNER_MODEL || 'opencode/claude-sonnet-4-5' }}
+          prompt: |
+            You are a planning agent. Read the issue body below and use the "plan" skill to create a detailed PLAN.md.
+
+            Issue #${{ github.event.issue.number }}: ${{ github.event.issue.title }}
+
+            ${{ github.event.issue.body }}
+
+            Steps:
+            1. Read the issue description carefully
+            2. Load the "plan" skill with: skill({ name: "plan" })
+            3. Follow the plan skill instructions to research, plan, and write PLAN.md
+            4. Create a feature branch named "bob/<short-kebab-desc>" derived from the title
+            5. Commit PLAN.md with message "ai(plan): <brief>"
+            6. Push the feature branch to origin
+
+      - name: Push feature branch and link to issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BRANCH=$(git branch --show-current)
+          if ! git ls-remote --heads origin "$BRANCH" | grep -q .; then
+            git push -u origin "$BRANCH"
+          fi
+          gh issue develop ${{ github.event.issue.number }} --name "$BRANCH"
+
+      - name: Implement the plan
+        id: implement
+        uses: anomalyco/opencode/github@latest
+        env:
+          OPENCODE_ZEN_API_KEY: ${{ secrets.OPENCODE_ZEN_API_KEY }}
+          OPENCODE_GO_API_KEY: ${{ secrets.OPENCODE_GO_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          model: ${{ vars.WORKER_MODEL || 'opencode/claude-sonnet-4-5' }}
+          prompt: |
+            You are an implementation agent. Read PLAN.md at the project root and use the "implement" skill to execute every task in order.
+
+            Steps:
+            1. Load the "implement" skill with: skill({ name: "implement" })
+            2. Follow the implement skill instructions to execute all tasks from PLAN.md
+            3. Commit after each task following Conventional Commits 2.0 with body descriptions
+            4. Push at the end of each phase or according to the plan.
+
+      - name: Commit remaining files and create PR
+        id: commit-and-pr
+        uses: anomalyco/opencode/github@latest
+        env:
+          OPENCODE_ZEN_API_KEY: ${{ secrets.OPENCODE_ZEN_API_KEY }}
+          OPENCODE_GO_API_KEY: ${{ secrets.OPENCODE_GO_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          model: ${{ vars.COMMIT_MODEL || 'opencode/claude-sonnet-4-5' }}
+          prompt: |
+            You are a finalization agent. Your job is to commit any remaining uncommitted changes and create a pull request.
+
+            Steps:
+            1. Check if there are any uncommitted changes with `git status --porcelain`
+            2. If there are uncommitted files, commit them using Conventional Commits 2.0:
+               - Use `git add -A && git commit -m "<type>(<scope>): <description>" -m "<body>"`
+               - The commit type must be one of: feat, fix, docs, style, refactor, perf, test, build, ci, chore, revert, ai
+            3. Push the feature branch to origin if not already pushed
+            4. Determine the base branch:
+               - Prefer "dev" if it exists, otherwise "main", otherwise "master"
+            5. Create a pull request using `gh pr create`:
+               - Base branch: the determined base branch
+               - Head branch: the current feature branch
+               - Title: a Conventional Commits 2.0 title summarizing the changes (e.g. "feat(scope): brief description")
+               - Body: a brief summary of what was implemented, referencing issue #${{ github.event.issue.number }}
+            6. The PR title MUST follow Conventional Commits 2.0 format
